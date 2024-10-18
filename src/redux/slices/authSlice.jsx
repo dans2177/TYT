@@ -4,7 +4,7 @@ import {
   createUserWithEmailAndPassword,
   signOut,
 } from "firebase/auth";
-import { auth } from "../../../api/firebase.jsx";
+import { auth } from "../../api/firebase";
 
 const initialState = {
   user: null,

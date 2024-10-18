@@ -1,10 +1,12 @@
 import React from "react";
 import { View, Text, TouchableOpacity } from "react-native";
 import { useDispatch } from "react-redux";
-import { FontAwesome } from "@expo/vector-icons";
+import { useNavigation } from "@react-navigation/native"; // Import navigation hook
+import HomeStartButton from "../utils/HomeStartButton";
 
 const HomeScreen = () => {
   const dispatch = useDispatch();
+  const navigation = useNavigation(); // Initialize navigation
 
   return (
     <View className="flex-1 items-center justify-between bg-zinc-900 p-6">
@@ -13,23 +15,21 @@ const HomeScreen = () => {
         <TouchableOpacity>
           <Text>💪</Text>
         </TouchableOpacity>
-        <Text className="text-2xl font-bold text-white text-neon-green">
-          Workout Planner
-        </Text>
+
+        {/* Make Workout Planner clickable */}
+        <TouchableOpacity onPress={() => navigation.navigate("Settings")}>
+          <Text className="text-2xl font-bold text-white text-neon-green">
+            Workout Planner
+          </Text>
+        </TouchableOpacity>
+
         <TouchableOpacity>
           <Text>🦾</Text>
         </TouchableOpacity>
       </View>
 
       {/* Start Workout Button */}
-      <View className="flex-1 justify-center items-center ">
-        <TouchableOpacity
-          className=" "
-        >
-          <FontAwesome name="play-circle" size={350} color="#39ff14" />
-          <Text className="text-xl text-neon-green mt-4 text-center text-white">Start Workout</Text>
-        </TouchableOpacity>
-      </View>
+      <HomeStartButton />
     </View>
   );
 };

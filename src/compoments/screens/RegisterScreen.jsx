@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from "react";
 import { View, TextInput, Button, Text, TouchableOpacity } from "react-native";
 import { useDispatch, useSelector } from "react-redux";
-import { register, setError } from "../redux/slices/authSlice"; // Ensure correct path
+import { register, setError } from "../../redux/slices/authSlice"; // Ensure correct path
 import Toast from "react-native-toast-message";
 
 const RegisterScreen = ({ navigation }) => {

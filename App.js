@@ -1,22 +1,22 @@
 import React, { useEffect } from "react";
 import { Provider, useSelector, useDispatch } from "react-redux";
 import { NavigationContainer } from "@react-navigation/native";
-import { store } from "./src/compoments/redux/store";
+import { store } from "./src/redux/store";
 import { onAuthStateChanged } from "firebase/auth";
 import { auth } from "./src/api/firebase";
 import {
   loginSuccess,
   logoutSuccess,
   setLoading,
-} from "./src/compoments/redux/slices/authSlice";
+} from "./src/redux/slices/authSlice";
 import LoadingScreen from "./src/compoments/screens/LoadingScreen";
-import AppNavigator from "./src/compoments/navigation/AppNavigator";
+import AppNavigator from "./src/navigation/AppNavigator";
 import Toast from "react-native-toast-message";
 import {
   SafeAreaProvider,
   useSafeAreaInsets,
 } from "react-native-safe-area-context";
-import { fetchProfile } from "./src/compoments/redux/slices/userSlice";
+import { fetchProfile } from "./src/redux/slices/userSlice";
 
 const MainApp = () => {
   const { user, loading } = useSelector((state) => state.auth);
