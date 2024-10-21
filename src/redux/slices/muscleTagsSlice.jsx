@@ -1,5 +1,12 @@
 import { createSlice, createAsyncThunk } from "@reduxjs/toolkit";
-import { getFirestore, doc, setDoc, getDoc } from "firebase/firestore";
+import {
+  getFirestore,
+  doc,
+  setDoc,
+  getDocs,
+  collection,
+  writeBatch,
+} from "firebase/firestore";
 import { getAuth } from "firebase/auth";
 
 // Async thunk for saving muscle tags to Firestore
@@ -13,9 +20,16 @@ export const saveMuscleTags = createAsyncThunk(
 
       const userId = user.uid;
       const db = getFirestore();
-      const docRef = doc(db, "muscleTags", userId);
+      const batch = writeBatch(db);
 
-      await setDoc(docRef, { muscleTags });
+      // For each day, create or update a document in the muscleTags subcollection
+      for (const day in muscleTags) {
+        const tags = muscleTags[day];
+        const docRef = doc(db, "users", userId, "muscleTags", day);
+        batch.set(docRef, { tags });
+      }
+
+      await batch.commit();
 
       return muscleTags;
     } catch (error) {
@@ -35,17 +49,20 @@ export const loadMuscleTags = createAsyncThunk(
 
       const userId = user.uid;
       const db = getFirestore();
-      const docRef = doc(db, "muscleTags", userId);
+      const collectionRef = collection(db, "users", userId, "muscleTags");
+      const querySnapshot = await getDocs(collectionRef);
 
-      const docSnap = await getDoc(docRef);
-      if (docSnap.exists()) {
-        const muscleTags = docSnap.data().muscleTags;
-        // Ensure at least one empty day if no muscle tags exist
-        return Object.keys(muscleTags).length > 0 ? muscleTags : { 1: [] };
-      } else {
-        // Return one empty day if no document exists
-        return { 1: [] };
+      const muscleTags = {};
+      querySnapshot.forEach((doc) => {
+        muscleTags[doc.id] = doc.data().tags;
+      });
+
+      // Ensure at least one empty day if no muscle tags exist
+      if (Object.keys(muscleTags).length === 0) {
+        muscleTags["1"] = [];
       }
+
+      return muscleTags;
     } catch (error) {
       return rejectWithValue(error.message);
     }

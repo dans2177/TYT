@@ -35,6 +35,7 @@ const muscleGroups = [
   "Abs",
   "Obliques",
   "Lower Back",
+  "Forearms"
 ];
 
 // Define a fixed list of colors

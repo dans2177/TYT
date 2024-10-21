@@ -7,6 +7,8 @@ import IntroModal from "../compoments/modals/IntroModal";
 import HomeScreen from "../compoments/screens/HomeScreen";
 import LoadingScreen from "../compoments/screens/LoadingScreen";
 import SettingsScreen from "../compoments/screens/SettingsScreen";
+import ExerciseScreen from "../compoments/screens/ExerciseScreen";
+
 
 const Stack = createStackNavigator();
 
@@ -59,12 +61,33 @@ const AppNavigator = ({ user }) => {
             options={{ headerShown: false }}
           />
           <Stack.Screen
+            name="Exercises"
+            component={ExerciseScreen}
+            options={{
+              headerShown: false,
+              cardStyleInterpolator: ({ current, layouts }) => {
+                return {
+                  cardStyle: {
+                    transform: [
+                      {
+                        translateX: current.progress.interpolate({
+                          inputRange: [0, 1],
+                          outputRange: [layouts.screen.width, 0],
+                        }),
+                      },
+                    ],
+                  },
+                };
+              },
+            }}
+          />
+          <Stack.Screen
             name="Settings"
             component={SettingsScreen}
             options={{
               headerShown: false,
-              presentation: "modal", // Modal presentation for swipe down
-              gestureDirection: "vertical", // Allows swipe down gesture
+              presentation: "modal",
+              gestureDirection: "vertical",
               cardStyleInterpolator: ({ current, layouts }) => ({
                 cardStyle: {
                   transform: [
