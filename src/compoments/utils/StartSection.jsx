@@ -130,7 +130,7 @@ const StartSection = ({ todayWorkout, date }) => {
         <View className="flex-row justify-between h-40">
           {/* Stretch Tile */}
           <TouchableOpacity
-            className="bg-lime-500 my-4 shadow-xl
+            className="bg-lime-500 my-4 mr-2 shadow-xl
                     shadow-zinc-800   ml-4 rounded-3xl w-[45vw] p-4 "
             onPress={handleCheckBoxPress}
           >

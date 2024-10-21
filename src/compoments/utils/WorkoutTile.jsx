@@ -1,18 +1,26 @@
-import React from "react";
-import { Text } from "react-native";
-import { LinearGradient } from "expo-linear-gradient";
+// src/components/utils/WorkoutTile.jsx
 
-const WorkoutTile = ({ workoutName }) => {
-  return (
-    <LinearGradient
-      colors={["#FF8C00", "#FF4500"]} // Same gradient color for all tiles
-      start={{ x: 0, y: 0 }} // Top-left
-      end={{ x: 1, y: 1 }} // Bottom-right
-      style={{ margin: 8, padding: 10, borderRadius: 20 }}
-    >
-      <Text className="text-black text-2xl font-semibold">{workoutName}</Text>
-    </LinearGradient>
-  );
-};
+import React from "react";
+import { View, Text, StyleSheet } from "react-native";
+
+const WorkoutTile = ({ workoutName }) => (
+  <View style={styles.tile}>
+    <Text style={styles.tileText}>{workoutName}</Text>
+  </View>
+);
+
+const styles = StyleSheet.create({
+  tile: {
+    backgroundColor: "#4CAF50",
+    padding: 10,
+    borderRadius: 5,
+    margin: 5,
+  },
+  tileText: {
+    color: "#FFFFFF",
+    fontSize: 16,
+    textAlign: "center",
+  },
+});
 
 export default WorkoutTile;

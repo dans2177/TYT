@@ -9,8 +9,8 @@ const HomeStartButton = ({ workoutData, onStartWorkout }) => {
   return (
     <View style={{ alignItems: "center" }}>
       {/* Play button in the center of the screen */}
-      <TouchableOpacity onPress={onStartWorkout}>
-        <FontAwesome name="play-circle" size={150} color="#00d1b2" />
+      <TouchableOpacity onPress={onStartWorkout} className="mt-20">
+        <FontAwesome name="play-circle" size={350} color="#00d1b2" />
       </TouchableOpacity>
 
       {/* Workout tags at the bottom */}

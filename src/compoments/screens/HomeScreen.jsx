@@ -1,12 +1,12 @@
 // src/components/screens/HomeScreen.js
 
 import React, { useEffect, useState } from "react";
-import { View, Text, TouchableOpacity, ScrollView } from "react-native";
+import { View, Text, TouchableOpacity, ScrollView, Button } from "react-native";
 import { useDispatch, useSelector } from "react-redux";
 import { useNavigation } from "@react-navigation/native";
 import HomeStartButton from "../utils/HomeStartButton";
 import StartSection from "../utils/StartSection";
-import ExerciseList from "../utils/ExerciseList";
+import ExerciseList from "../utils/ExerciseList"; // Correct import
 import RatingComponent from "../utils/RatingComponent";
 import {
   loadWorkouts,
@@ -72,9 +72,9 @@ const HomeScreen = () => {
   };
 
   return (
-    <ScrollView className="flex-1 bg-zinc-900 p-6">
+    <ScrollView className="flex-1 bg-zinc-900">
       {/* Top Banner */}
-      <View className="flex-row w-full justify-between items-center mt-10">
+      <View className="flex-row w-full justify-between items-center mt-10 p-6">
         <TouchableOpacity>
           <Text>💪</Text>
         </TouchableOpacity>
@@ -92,7 +92,9 @@ const HomeScreen = () => {
         </TouchableOpacity>
       </View>
 
+      {/* Conditional Rendering */}
       {!workoutStarted ? (
+        // Show Start Button and Today's Workout
         <>
           {/* Start Workout Button */}
           <HomeStartButton
@@ -100,12 +102,13 @@ const HomeScreen = () => {
             onStartWorkout={handleStartWorkout}
           />
         </>
-      ) : !workoutCompleted ? (
+      ) : (
+        // Show Stretch, Cardio, Exercises
         <>
           {/* Start Section */}
           <StartSection todayWorkout={todayWorkout} date={date} />
 
-          {/* Exercise List */}
+          {/* Exercises Component */}
           <ExerciseList
             exercises={todayWorkout?.exercises || {}}
             date={date}
@@ -113,29 +116,25 @@ const HomeScreen = () => {
           />
 
           {/* Complete Workout Button */}
-          <View style={{ marginTop: 20, alignItems: "center" }}>
+          {!workoutCompleted && (
             <TouchableOpacity
               onPress={handleCompleteWorkout}
-              style={{
-                backgroundColor: "#00d1b2",
-                padding: 10,
-                borderRadius: 10,
-              }}
+              className="bg-blue-500 rounded-lg p-4 mt-4"
             >
-              <Text style={{ color: "white", fontSize: 18 }}>
+              <Text className="text-white text-center text-lg">
                 Complete Workout
               </Text>
             </TouchableOpacity>
-          </View>
-        </>
-      ) : (
-        <>
+          )}
+
           {/* Rating Component */}
-          <RatingComponent
-            rating={todayWorkout?.rating}
-            date={date}
-            todayWorkout={todayWorkout}
-          />
+          {workoutCompleted && (
+            <RatingComponent
+              rating={todayWorkout?.rating}
+              date={date}
+              todayWorkout={todayWorkout}
+            />
+          )}
         </>
       )}
     </ScrollView>

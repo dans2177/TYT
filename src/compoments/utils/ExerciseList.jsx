@@ -1,20 +1,27 @@
-// src/components/utils/Exercises.js
+// src/components/utils/ExerciseList.jsx
 
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import {
   View,
   Text,
-  TextInput,
   TouchableOpacity,
-  Alert,
   Modal,
   Button,
+  TextInput,
+  Alert,
   FlatList,
+  ScrollView,
 } from "react-native";
 import { Ionicons } from "@expo/vector-icons";
-import { MaterialCommunityIcons } from "@expo/vector-icons";
-import { useDispatch } from "react-redux";
+import { useDispatch, useSelector } from "react-redux";
+import {
+  loadExercises,
+  addExerciseToFirestore,
+  updateExerciseInFirestore,
+  deleteExerciseFromFirestore,
+} from "../../redux/slices/exerciseSlice";
 import { addOrUpdateWorkoutInFirestore } from "../../redux/slices/workoutSlice";
+import WorkoutTile from "./WorkoutTile"; // Ensure correct import
 
 const ExerciseList = ({ exercises, date, allExercises }) => {
   const dispatch = useDispatch();
@@ -76,7 +83,7 @@ const ExerciseList = ({ exercises, date, allExercises }) => {
   const addNewWorkout = (exercise) => {
     const newWorkout = {
       id: exercise.id,
-      name: exercise.name,
+      title: exercise.title, // Ensure 'title' exists in exercise
       max: exercise.max || 0,
       notes: exercise.notes || "",
       sets: [],
@@ -90,12 +97,13 @@ const ExerciseList = ({ exercises, date, allExercises }) => {
   // Toggle active workout
   const toggleActiveWorkout = (index) => {
     if (activeWorkoutIndex === index) {
-      setActiveWorkoutIndex(null);
+      setActiveWorkoutIndex(null); // Deactivate if it's already active
     } else {
-      setActiveWorkoutIndex(index);
+      setActiveWorkoutIndex(index); // Set as active
     }
   };
 
+  // Update exercises in Firestore
   const updateExercisesInFirestore = (workouts) => {
     const exercisesObj = {};
     workouts.forEach((workout) => {
@@ -121,106 +129,115 @@ const ExerciseList = ({ exercises, date, allExercises }) => {
           className="rounded-full bg-lime-600 h-10 w-10 justify-center items-center shadow-2xl shadow-zinc-800 ml-2"
           onPress={() => setAddWorkoutModalVisible(true)}
         >
-          <MaterialCommunityIcons name="plus" size={24} color="black" />
+          <Ionicons name="add" size={24} color="black" />
         </TouchableOpacity>
       </View>
 
       {/* Workouts */}
-      {workoutList.map((workout, workoutIndex) => {
-        const isActive = workoutIndex === activeWorkoutIndex;
-        return (
-          <TouchableOpacity
-            key={workoutIndex}
-            onPress={() => toggleActiveWorkout(workoutIndex)}
-            className={`rounded-3xl w-full mb-2 shadow-2xl shadow-zinc-800  
-               ${isActive ? "bg-lime-500" : "bg-black"}`}
-          >
-            <View className="flex-row justify-between items-start mb-2">
-              <View>
-                <Text
-                  className={` ${
-                    isActive ? "text-black " : "text-lime-500"
-                  } text-2xl pl-4 pt-4 m`}
+      <ScrollView>
+        {workoutList.map((workout, workoutIndex) => {
+          const isActive = workoutIndex === activeWorkoutIndex;
+          return (
+            <TouchableOpacity
+              key={workoutIndex}
+              onPress={() => toggleActiveWorkout(workoutIndex)}
+              className={`rounded-3xl w-full mb-2 shadow-2xl shadow-zinc-800  
+                 ${isActive ? "bg-lime-500" : "bg-black"}`}
+            >
+              <View className="flex-row justify-between items-start mb-2">
+                <View>
+                  <Text
+                    className={` ${
+                      isActive ? "text-black " : "text-lime-500"
+                    } text-2xl pl-4 pt-4 m`}
+                  >
+                    {workout.title} {/* Ensure 'title' is correctly set */}
+                  </Text>
+                  <Text
+                    className={` ${
+                      isActive ? "text-black" : " text-gray-200"
+                    }  text-sm pl-6 mt-0 pt-0 `}
+                  >
+                    Personal Best: {workout.max} lbs
+                  </Text>
+                </View>
+
+                {/* Icon to trigger the modal */}
+                <TouchableOpacity
+                  onPress={() => showWorkoutInfo(workoutIndex)}
+                  className="p-4"
                 >
-                  {workout.name}
-                </Text>
-                <Text
-                  className={` ${
-                    isActive ? "text-black" : " text-gray-200"
-                  }  text-sm pl-6 mt-0 pt-0 `}
-                >
-                  Personal Best: {workout.max} lbs
-                </Text>
+                  <Ionicons
+                    name="information-circle-outline"
+                    size={24}
+                    color="white"
+                  />
+                </TouchableOpacity>
               </View>
 
-              {/* Icon to trigger the modal */}
-              <TouchableOpacity
-                onPress={() => showWorkoutInfo(workoutIndex)}
-                className="p-4"
-              >
-                <Ionicons
-                  name="information-circle-outline"
-                  size={24}
-                  color="white"
-                />
-              </TouchableOpacity>
-            </View>
-
-            {/* Sets */}
-            <View className="flex-wrap flex-row mt-2 justify-start pb-4 max-w-[100vw] px-4">
-              {workout.sets.map((set, setIndex) => (
-                <TouchableOpacity
-                  key={setIndex}
-                  onLongPress={() => handleLongPress(workoutIndex, setIndex)}
-                  delayLongPress={500}
-                  style={{ flexBasis: "33%", marginBottom: 5 }}
-                >
-                  <View
-                    className={`${
-                      isActive ? "bg-lime-600 " : "bg-lime-500 "
-                    } rounded-lg  mx-1 h-22 flex-row justify-between align-middle items-center`}
+              {/* Sets */}
+              <View className="flex-wrap flex-row mt-2 justify-start pb-4 max-w-[100vw] px-4">
+                {workout.sets.map((set, setIndex) => (
+                  <TouchableOpacity
+                    key={setIndex}
+                    onLongPress={() => handleLongPress(workoutIndex, setIndex)}
+                    delayLongPress={500} // Adjust this if needed
+                    style={{ flexBasis: "33%", marginBottom: 5 }} // FlexBasis ensures equal width
                   >
-                    <TextInput
-                      className="text-black text-4xl text-center pl-2  font-inconsolata"
-                      placeholder="000"
-                      placeholderTextColor="black"
-                      value={set.weight.toString()}
-                      editable={isActive}
-                      onChangeText={(value) =>
-                        handleSetChange(workoutIndex, setIndex, "weight", value)
-                      }
-                      keyboardType="numeric"
-                      maxLength={3}
-                    />
-                    <TextInput
-                      className="text-black text-2xl text-center mr-2 font-inconsolata"
-                      placeholder="00"
-                      placeholderTextColor="black"
-                      value={set.reps.toString()}
-                      editable={isActive}
-                      onChangeText={(value) =>
-                        handleSetChange(workoutIndex, setIndex, "reps", value)
-                      }
-                      keyboardType="numeric"
-                      maxLength={2}
-                    />
-                  </View>
-                </TouchableOpacity>
-              ))}
+                    <View
+                      className={`${
+                        isActive ? "bg-lime-600 " : "bg-lime-500 "
+                      } rounded-lg  mx-1 h-22 flex-row justify-between align-middle items-center`}
+                    >
+                      <TextInput
+                        className="text-black text-4xl text-center pl-2  font-inconsolata"
+                        placeholder="000"
+                        placeholderTextColor="black"
+                        value={set.weight.toString()}
+                        editable={isActive}
+                        onChangeText={(value) =>
+                          handleSetChange(
+                            workoutIndex,
+                            setIndex,
+                            "weight",
+                            value
+                          )
+                        }
+                        keyboardType="numeric"
+                        maxLength={3} // Changed maxLength to 3 for TextInput
+                      />
+                      <TextInput
+                        className="text-black text-2xl text-center mr-2 font-inconsolata"
+                        placeholder="00"
+                        placeholderTextColor="black"
+                        value={set.reps.toString()}
+                        editable={isActive}
+                        onChangeText={(value) =>
+                          handleSetChange(workoutIndex, setIndex, "reps", value)
+                        }
+                        keyboardType="numeric"
+                        maxLength={2} // Changed maxLength to 2 for TextInput
+                      />
+                    </View>
+                  </TouchableOpacity>
+                ))}
 
-              {isActive && (
-                <TouchableOpacity
-                  onPress={() => addSet(workoutIndex)}
-                  className="rounded-lg bg-black h-22 "
-                  style={{ flexBasis: "31%", marginBottom: 5 }}
-                >
-                  <Text className="text-lime-500 text-4xl text-center">+</Text>
-                </TouchableOpacity>
-              )}
-            </View>
-          </TouchableOpacity>
-        );
-      })}
+                {isActive && (
+                  <TouchableOpacity
+                    onPress={() => addSet(workoutIndex)}
+                    className="rounded-lg bg-black h-22 "
+                    style={{ flexBasis: "31%", marginBottom: 5 }} // Same flexBasis for consistent size
+                  >
+                    <Text className="text-lime-500 text-4xl text-center">
+                      +
+                    </Text>
+                  </TouchableOpacity>
+                )}
+              </View>
+            </TouchableOpacity>
+          );
+        })}
+      </ScrollView>
 
       {/* Modal for displaying workout info */}
       {selectedWorkout && (
@@ -236,7 +253,7 @@ const ExerciseList = ({ exercises, date, allExercises }) => {
           >
             <View className="bg-gray-800 rounded-lg p-5 w-[80vw]">
               <Text className="text-white text-xl mb-4">
-                {selectedWorkout.name}
+                {selectedWorkout.title} {/* Ensure 'title' is correctly set */}
               </Text>
               <Text className="text-white mb-2">
                 Max: {selectedWorkout.max} lbs
@@ -273,7 +290,8 @@ const ExerciseList = ({ exercises, date, allExercises }) => {
                   onPress={() => addNewWorkout(item)}
                   className="p-2"
                 >
-                  <Text className="text-white">{item.name}</Text>
+                  <Text className="text-white">{item.title}</Text>
+                  {/* Removed the {" "} to prevent the error */}
                 </TouchableOpacity>
               )}
             />
