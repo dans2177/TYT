@@ -4,14 +4,20 @@ import React from "react";
 import { View, Text, TouchableOpacity } from "react-native";
 import { FontAwesome } from "@expo/vector-icons";
 import WorkoutTile from "./WorkoutTile";
+import { useSelector } from "react-redux";
+import { makeSelectIsStartedByDate } from "../../redux/selectors";
 
-const HomeStartButton = ({ workoutData, onStartWorkout }) => {
+const HomeStartButton = ({ workoutData, onStartWorkout, date }) => {
+  const selectIsStartedByDate = makeSelectIsStartedByDate();
+  const isStarted = useSelector((state) => selectIsStartedByDate(state, date));
+
   return (
-    <View style={{ alignItems: "center" }}>
-      {/* Play button in the center of the screen */}
-      <TouchableOpacity onPress={onStartWorkout} className="mt-20">
-        <FontAwesome name="play-circle" size={350} color="#00d1b2" />
-      </TouchableOpacity>
+    <View style={{ alignItems: "center", marginTop: 80 }}>
+      {!isStarted && (
+        <TouchableOpacity onPress={onStartWorkout} style={{ marginTop: 80 }}>
+          <FontAwesome name="play-circle" size={350} color="#00d1b2" />
+        </TouchableOpacity>
+      )}
 
       {/* Workout tags at the bottom */}
       <View style={{ marginTop: 20, alignItems: "center" }}>

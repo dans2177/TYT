@@ -1,3 +1,4 @@
+// muscleTagsSlice.js
 import { createSlice, createAsyncThunk } from "@reduxjs/toolkit";
 import {
   getFirestore,
@@ -6,8 +7,10 @@ import {
   getDocs,
   collection,
   writeBatch,
+  deleteDoc,
 } from "firebase/firestore";
 import { getAuth } from "firebase/auth";
+import Toast from "react-native-root-toast";
 
 // Async thunk for saving muscle tags to Firestore
 export const saveMuscleTags = createAsyncThunk(
@@ -22,12 +25,26 @@ export const saveMuscleTags = createAsyncThunk(
       const db = getFirestore();
       const batch = writeBatch(db);
 
-      // For each day, create or update a document in the muscleTags subcollection
-      for (const day in muscleTags) {
+      // Fetch existing days from Firestore to identify deletions
+      const collectionRef = collection(db, "users", userId, "muscleTags");
+      const existingDocs = await getDocs(collectionRef);
+      const existingDays = existingDocs.docs.map((doc) => doc.id);
+
+      const newDays = Object.keys(muscleTags);
+      const daysToDelete = existingDays.filter((day) => !newDays.includes(day));
+
+      // Delete removed days
+      daysToDelete.forEach((day) => {
+        const docRef = doc(db, "users", userId, "muscleTags", day);
+        batch.delete(docRef);
+      });
+
+      // Set or update existing days
+      newDays.forEach((day) => {
         const tags = muscleTags[day];
         const docRef = doc(db, "users", userId, "muscleTags", day);
         batch.set(docRef, { tags });
-      }
+      });
 
       await batch.commit();
 
@@ -88,10 +105,16 @@ const muscleTagsSlice = createSlice({
       .addCase(saveMuscleTags.fulfilled, (state, action) => {
         state.status = "succeeded";
         state.muscleTags = action.payload;
+        Toast.show("Muscle tags saved successfully!", {
+          duration: Toast.durations.SHORT,
+        });
       })
       .addCase(saveMuscleTags.rejected, (state, action) => {
         state.status = "failed";
         state.error = action.payload;
+        Toast.show(`Failed to save muscle tags: ${action.payload}`, {
+          duration: Toast.durations.LONG,
+        });
       })
       // Handle loadMuscleTags actions
       .addCase(loadMuscleTags.pending, (state) => {
@@ -100,10 +123,16 @@ const muscleTagsSlice = createSlice({
       .addCase(loadMuscleTags.fulfilled, (state, action) => {
         state.status = "succeeded";
         state.muscleTags = action.payload; // Action payload will include at least one empty day
+        Toast.show("Muscle tags loaded successfully!", {
+          duration: Toast.durations.SHORT,
+        });
       })
       .addCase(loadMuscleTags.rejected, (state, action) => {
         state.status = "failed";
         state.error = action.payload;
+        Toast.show(`Failed to load muscle tags: ${action.payload}`, {
+          duration: Toast.durations.LONG,
+        });
       });
   },
 });

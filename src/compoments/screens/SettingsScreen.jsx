@@ -1,3 +1,4 @@
+// SettingsScreen.js
 import React, { useState, useEffect, useRef } from "react";
 import {
   View,
@@ -6,7 +7,7 @@ import {
   ScrollView,
   Modal,
   FlatList,
-  Alert, // Import Alert for user feedback
+  Alert,
 } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { styled } from "nativewind";
@@ -35,7 +36,7 @@ const muscleGroups = [
   "Abs",
   "Obliques",
   "Lower Back",
-  "Forearms"
+  "Forearms",
 ];
 
 // Define a fixed list of colors
@@ -100,7 +101,9 @@ const SettingsScreen = () => {
       // Check if days are less than 7
       setSelectedDays((prev) => {
         const newSelectedDays = { ...prev };
-        const nextDay = days + 1; // Calculate the next day number
+        // Determine the next day ID as the maximum existing day ID + 1
+        const dayIds = Object.keys(newSelectedDays).map(Number);
+        const nextDay = Math.max(...dayIds) + 1;
         newSelectedDays[nextDay] = []; // Add a new empty day
         return newSelectedDays;
       });
@@ -114,7 +117,9 @@ const SettingsScreen = () => {
     if (days > 1) {
       setSelectedDays((prev) => {
         const newSelectedDays = { ...prev };
-        delete newSelectedDays[days]; // Remove the last day
+        const dayIds = Object.keys(newSelectedDays).map(Number);
+        const maxDay = Math.max(...dayIds);
+        delete newSelectedDays[maxDay];
         return newSelectedDays;
       });
     }
@@ -158,7 +163,7 @@ const SettingsScreen = () => {
   );
 
   const handleLogout = () => {
-    //alert and dispatch logoiut
+    //alert and dispatch logout
     Alert.alert("Logout", "Are you sure you want to logout?", [
       {
         text: "Cancel",

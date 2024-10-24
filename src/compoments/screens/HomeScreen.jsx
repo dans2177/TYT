@@ -1,20 +1,24 @@
 // src/components/screens/HomeScreen.js
 
 import React, { useEffect, useState } from "react";
-import { View, Text, TouchableOpacity, ScrollView, Button } from "react-native";
+import { View, Text, TouchableOpacity } from "react-native";
 import { useDispatch, useSelector } from "react-redux";
 import { useNavigation } from "@react-navigation/native";
 import HomeStartButton from "../utils/HomeStartButton";
 import StartSection from "../utils/StartSection";
-import ExerciseList from "../utils/ExerciseList"; // Correct import
+import ExerciseList from "../utils/ExerciseList";
 import RatingComponent from "../utils/RatingComponent";
 import {
-  loadWorkouts,
+  loadWorkoutByDate,
   addOrUpdateWorkoutInFirestore,
-} from "../../redux/slices/workoutSlice";
+  startWorkout,
+  completeWorkout,
+} from "../../redux/slices/workoutsSlice"; // Ensure correct path
 import { loadExercises } from "../../redux/slices/exerciseSlice";
 import { fetchProfile } from "../../redux/slices/userSlice";
 import { loadMuscleTags } from "../../redux/slices/muscleTagsSlice";
+import { makeSelectIsStartedByDate } from "../../redux/selectors";
+import LoadingScreen from "./LoadingScreen";
 
 const HomeScreen = () => {
   const dispatch = useDispatch();
@@ -22,11 +26,12 @@ const HomeScreen = () => {
 
   const userProfile = useSelector((state) => state.user.profile);
   const muscleTags = useSelector((state) => state.muscleTags.muscleTags);
-  const workouts = useSelector((state) => state.workout.workouts);
+  const workouts = useSelector((state) => state.workouts.workouts);
+  const workoutsStatus = useSelector((state) => state.workouts.status); // Added
+  const workoutsError = useSelector((state) => state.workouts.error); // Optional: To handle errors
   const exercises = useSelector((state) => state.exercises.data);
 
   const [selectedDate, setSelectedDate] = useState(new Date());
-  const [workoutStarted, setWorkoutStarted] = useState(false);
   const [workoutCompleted, setWorkoutCompleted] = useState(false);
 
   const workoutDay = userProfile.workoutDay || "1";
@@ -35,81 +40,108 @@ const HomeScreen = () => {
   const date = selectedDate.toISOString().split("T")[0];
   const todayWorkout = workouts[date];
 
+  const selectIsStartedByDate = makeSelectIsStartedByDate();
+  const isStarted = useSelector((state) => selectIsStartedByDate(state, date));
+
   useEffect(() => {
-    // Load workouts, exercises, muscle tags, and user profile when component mounts
-    dispatch(loadWorkouts());
+    // Load necessary data when component mounts
     dispatch(loadExercises());
     dispatch(fetchProfile());
     dispatch(loadMuscleTags());
   }, [dispatch]);
 
   useEffect(() => {
-    if (workouts && !workouts[date]) {
-      // Create a default workout
-      const defaultWorkout = {
-        stretch: false,
-        cardio: {
-          type: "treadmill",
-          time: 10,
-        },
-        cardioCompleted: false,
-        exercises: {},
-        rating: null,
-      };
-      // Dispatch action to add the default workout to Firestore
-      dispatch(
-        addOrUpdateWorkoutInFirestore({ date, workout: defaultWorkout })
-      );
-    }
-  }, [workouts, date, dispatch]);
+    // Load workout for the current date
+    dispatch(loadWorkoutByDate(date));
+  }, [dispatch, date]);
+
+  // Removed redundant useEffect that initializes default workout
 
   const handleStartWorkout = () => {
-    setWorkoutStarted(true);
+    dispatch(startWorkout({ date }));
   };
 
   const handleCompleteWorkout = () => {
+    dispatch(completeWorkout({ date }));
     setWorkoutCompleted(true);
   };
 
+  // Render Loading Screen based on status
+  if (workoutsStatus === "loading") {
+    return (
+      <LoadingScreen />
+    );
+  }
+
+  // Optional: Handle Error State
+  if (workoutsStatus === "failed") {
+    return (
+      <View style={styles.errorContainer}>
+        <Text style={styles.errorText}>Error: {workoutsError}</Text>
+        <TouchableOpacity onPress={() => dispatch(loadWorkoutByDate(date))}>
+          <Text style={styles.retryText}>Retry</Text>
+        </TouchableOpacity>
+      </View>
+    );
+  }
+
   return (
-    <ScrollView className="flex-1 bg-zinc-900">
+    <View style={{ flex: 1, backgroundColor: "#1a202c" }}>
       {/* Top Banner */}
-      <View className="flex-row w-full justify-between items-center mt-10 p-6">
+      <View
+        style={{
+          flexDirection: "row",
+          width: "100%",
+          justifyContent: "space-between",
+          alignItems: "center",
+          marginTop: 40,
+          padding: 24,
+        }}
+      >
         <TouchableOpacity>
-          <Text>💪</Text>
+          <Text style={{ fontSize: 24 }}>💪</Text>
         </TouchableOpacity>
 
         {/* Make Workout Planner clickable */}
         <TouchableOpacity onPress={() => navigation.navigate("Settings")}>
-          <Text className="text-2xl font-bold text-white text-neon-green">
+          <Text
+            style={{
+              fontSize: 24,
+              fontWeight: "bold",
+              color: "#00FF00",
+            }}
+          >
             Workout Planner
           </Text>
         </TouchableOpacity>
 
         {/* Navigate to Exercises */}
         <TouchableOpacity onPress={() => navigation.navigate("Exercises")}>
-          <Text>🦾</Text>
+          <Text style={{ fontSize: 24 }}>🦾</Text>
         </TouchableOpacity>
       </View>
 
       {/* Conditional Rendering */}
-      {!workoutStarted ? (
+      {!isStarted ? (
         // Show Start Button and Today's Workout
-        <>
-          {/* Start Workout Button */}
-          <HomeStartButton
-            workoutData={todayMuscleTags}
-            onStartWorkout={handleStartWorkout}
-          />
-        </>
+        <HomeStartButton
+          workoutData={todayMuscleTags}
+          onStartWorkout={handleStartWorkout}
+          date={date} // Pass 'date' prop
+        />
       ) : (
         // Show Stretch, Cardio, Exercises
         <>
           {/* Start Section */}
-          <StartSection todayWorkout={todayWorkout} date={date} />
+          <StartSection
+            todayWorkout={todayWorkout}
+            date={date}
+            isLoading={workoutsStatus === "loading"}
+          />
 
           {/* Exercises Component */}
           <ExerciseList
+            workoutId={todayWorkout?.id}
             exercises={todayWorkout?.exercises || {}}
             date={date}
             allExercises={exercises}
@@ -119,9 +151,16 @@ const HomeScreen = () => {
           {!workoutCompleted && (
             <TouchableOpacity
               onPress={handleCompleteWorkout}
-              className="bg-blue-500 rounded-lg p-4 mt-4"
+              style={{
+                backgroundColor: "#4299e1",
+                borderRadius: 8,
+                padding: 16,
+                marginTop: 16,
+              }}
             >
-              <Text className="text-white text-center text-lg">
+              <Text
+                style={{ color: "#ffffff", textAlign: "center", fontSize: 18 }}
+              >
                 Complete Workout
               </Text>
             </TouchableOpacity>
@@ -132,13 +171,43 @@ const HomeScreen = () => {
             <RatingComponent
               rating={todayWorkout?.rating}
               date={date}
-              todayWorkout={todayWorkout}
+              workoutId={todayWorkout?.id}
             />
           )}
         </>
       )}
-    </ScrollView>
+    </View>
   );
+};
+
+const styles = {
+  loadingContainer: {
+    flex: 1,
+    justifyContent: "center",
+    alignItems: "center",
+    backgroundColor: "#1a202c",
+  },
+  loadingText: {
+    marginTop: 16,
+    fontSize: 18,
+    color: "#ffffff",
+  },
+  errorContainer: {
+    flex: 1,
+    justifyContent: "center",
+    alignItems: "center",
+    backgroundColor: "#1a202c",
+  },
+  errorText: {
+    fontSize: 18,
+    color: "red",
+    marginBottom: 16,
+  },
+  retryText: {
+    fontSize: 16,
+    color: "#00d1b2",
+    textDecorationLine: "underline",
+  },
 };
 
 export default HomeScreen;

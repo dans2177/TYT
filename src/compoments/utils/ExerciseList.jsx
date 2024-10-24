@@ -15,41 +15,87 @@ import {
 import { Ionicons } from "@expo/vector-icons";
 import { useDispatch, useSelector } from "react-redux";
 import {
-  loadExercises,
-  addExerciseToFirestore,
-  updateExerciseInFirestore,
-  deleteExerciseFromFirestore,
-} from "../../redux/slices/exerciseSlice";
-import { addOrUpdateWorkoutInFirestore } from "../../redux/slices/workoutSlice";
+  loadExerciseTracking,
+  addOrUpdateExerciseTrackingInFirestore,
+} from "../../redux/slices/workoutExerciseTrackingSlice";
 import WorkoutTile from "./WorkoutTile"; // Ensure correct import
+import {
+  makeSelectExerciseTrackingByWorkoutId,
+  makeSelectExercisesByWorkoutId,
+} from "../../redux/selectors"; // Correct import path
 
-const ExerciseList = ({ exercises, date, allExercises }) => {
+const ExerciseList = ({ workoutId, exercises, date, allExercises }) => {
   const dispatch = useDispatch();
 
-  const [workoutList, setWorkoutList] = useState(Object.values(exercises));
+  // Create instances of the selectors
+  const selectExerciseTrackingByWorkoutId =
+    makeSelectExerciseTrackingByWorkoutId();
+  const selectExercisesByWorkoutId = makeSelectExercisesByWorkoutId();
+
+  // Use the memoized selectors with useSelector
+  const exerciseTracking = useSelector((state) =>
+    selectExerciseTrackingByWorkoutId(state, workoutId)
+  );
+
+  const workoutExercises = useSelector((state) =>
+    selectExercisesByWorkoutId(state, workoutId)
+  );
+
+  const trackingStatus = useSelector(
+    (state) => state.workoutExerciseTracking.status
+  );
+  const trackingError = useSelector(
+    (state) => state.workoutExerciseTracking.error
+  );
+
   const [modalVisible, setModalVisible] = useState(false);
   const [selectedWorkout, setSelectedWorkout] = useState(null);
   const [addWorkoutModalVisible, setAddWorkoutModalVisible] = useState(false);
   const [activeWorkoutIndex, setActiveWorkoutIndex] = useState(null);
 
+  const [newExercise, setNewExercise] = useState({
+    title: "",
+    max: "",
+    notes: "",
+  });
+
+  useEffect(() => {
+    // Load tracking data for each exercise
+    Object.keys(exercises).forEach((exerciseId) => {
+      dispatch(loadExerciseTracking({ workoutId, exerciseId }));
+    });
+  }, [dispatch, workoutId, exercises]);
+
   // Handle adding a new set for a workout
-  const addSet = (index) => {
-    const newWorkouts = [...workoutList];
-    newWorkouts[index].sets.push({ weight: "", reps: "" });
-    setWorkoutList(newWorkouts);
-    updateExercisesInFirestore(newWorkouts);
+  const addSet = (exerciseId) => {
+    const currentTracking = exerciseTracking[exerciseId]?.sets || [];
+    const newSets = [...currentTracking, { reps: "", weight: "" }];
+    dispatch(
+      addOrUpdateExerciseTrackingInFirestore({
+        workoutId,
+        exerciseId,
+        tracking: { sets: newSets },
+      })
+    );
   };
 
   // Handle changing the weight or reps for a set
-  const handleSetChange = (workoutIndex, setIndex, field, value) => {
-    const newWorkouts = [...workoutList];
-    newWorkouts[workoutIndex].sets[setIndex][field] = value;
-    setWorkoutList(newWorkouts);
-    updateExercisesInFirestore(newWorkouts);
+  const handleSetChange = (exerciseId, setIndex, field, value) => {
+    const currentTracking = exerciseTracking[exerciseId]?.sets || [];
+    const updatedSets = currentTracking.map((set, index) =>
+      index === setIndex ? { ...set, [field]: value } : set
+    );
+    dispatch(
+      addOrUpdateExerciseTrackingInFirestore({
+        workoutId,
+        exerciseId,
+        tracking: { sets: updatedSets },
+      })
+    );
   };
 
   // Handle long press to delete a set
-  const handleLongPress = (workoutIndex, setIndex) => {
+  const handleLongPress = (exerciseId, setIndex) => {
     Alert.alert(
       "Delete Set",
       "Are you sure you want to delete this set?",
@@ -61,10 +107,17 @@ const ExerciseList = ({ exercises, date, allExercises }) => {
         {
           text: "Delete",
           onPress: () => {
-            const newWorkouts = [...workoutList];
-            newWorkouts[workoutIndex].sets.splice(setIndex, 1);
-            setWorkoutList(newWorkouts);
-            updateExercisesInFirestore(newWorkouts);
+            const currentTracking = exerciseTracking[exerciseId]?.sets || [];
+            const updatedSets = currentTracking.filter(
+              (_, index) => index !== setIndex
+            );
+            dispatch(
+              addOrUpdateExerciseTrackingInFirestore({
+                workoutId,
+                exerciseId,
+                tracking: { sets: updatedSets },
+              })
+            );
           },
           style: "destructive",
         },
@@ -74,24 +127,49 @@ const ExerciseList = ({ exercises, date, allExercises }) => {
   };
 
   // Show modal with full workout info
-  const showWorkoutInfo = (workoutIndex) => {
-    setSelectedWorkout(workoutList[workoutIndex]);
+  const showWorkoutInfo = (exercise) => {
+    setSelectedWorkout(exercise);
     setModalVisible(true);
   };
 
-  // Add a new workout
-  const addNewWorkout = (exercise) => {
-    const newWorkout = {
-      id: exercise.id,
-      title: exercise.title, // Ensure 'title' exists in exercise
-      max: exercise.max || 0,
-      notes: exercise.notes || "",
-      sets: [],
-    };
-    const newWorkouts = [...workoutList, newWorkout];
-    setWorkoutList(newWorkouts);
-    updateExercisesInFirestore(newWorkouts);
-    setAddWorkoutModalVisible(false);
+  // Add a new exercise to the workout
+  const addNewExerciseToWorkout = () => {
+    if (newExercise.title && newExercise.max) {
+      // Generate a unique ID for the new exercise
+      const exerciseId = `${newExercise.title
+        .toLowerCase()
+        .replace(/\s+/g, "_")}_${Date.now()}`;
+
+      // Update the workout's exercises in Firestore
+      dispatch(
+        addOrUpdateWorkoutInFirestore({
+          date,
+          workout: {
+            ...workoutExercises,
+            [exerciseId]: {
+              title: newExercise.title,
+              max: parseInt(newExercise.max),
+              notes: newExercise.notes || "",
+            },
+          },
+        })
+      );
+
+      // Initialize tracking for the new exercise
+      dispatch(
+        addOrUpdateExerciseTrackingInFirestore({
+          workoutId,
+          exerciseId,
+          tracking: { sets: [] },
+        })
+      );
+
+      // Reset and close modal
+      setNewExercise({ title: "", max: "", notes: "" });
+      setAddWorkoutModalVisible(false);
+    } else {
+      Alert.alert("Please fill out the exercise name and max weight.");
+    }
   };
 
   // Toggle active workout
@@ -103,120 +181,187 @@ const ExerciseList = ({ exercises, date, allExercises }) => {
     }
   };
 
-  // Update exercises in Firestore
-  const updateExercisesInFirestore = (workouts) => {
-    const exercisesObj = {};
-    workouts.forEach((workout) => {
-      exercisesObj[workout.id] = workout;
-    });
-    const updatedWorkout = {
-      exercises: exercisesObj,
-    };
-    dispatch(addOrUpdateWorkoutInFirestore({ date, workout: updatedWorkout }));
-  };
-
   return (
-    <View className="mx-2">
-      <View className="h-1 bg-black w-full mb-2"></View>
-      <View className="flex-row justify-between items-center mb-2">
+    <View style={{ marginHorizontal: 8 }}>
+      <View
+        style={{
+          height: 4,
+          backgroundColor: "#000000",
+          width: "100%",
+          marginBottom: 8,
+        }}
+      ></View>
+      <View
+        style={{
+          flexDirection: "row",
+          justifyContent: "space-between",
+          alignItems: "center",
+          marginBottom: 8,
+        }}
+      >
         {/* Exercises Text on the Left */}
-        <View className="flex-1">
-          <Text className="text-white text-2xl">Exercises</Text>
+        <View style={{ flex: 1 }}>
+          <Text style={{ color: "#ffffff", fontSize: 20 }}>Exercises</Text>
         </View>
 
         {/* Button on the Right */}
         <TouchableOpacity
-          className="rounded-full bg-lime-600 h-10 w-10 justify-center items-center shadow-2xl shadow-zinc-800 ml-2"
+          style={{
+            backgroundColor: "#a0f0a0", // Tailwind 'bg-lime-600'
+            height: 40,
+            width: 40,
+            borderRadius: 20,
+            justifyContent: "center",
+            alignItems: "center",
+            shadowColor: "#1a202c",
+            shadowOffset: { width: 0, height: 2 },
+            shadowOpacity: 0.8,
+            shadowRadius: 2,
+            elevation: 5,
+            marginLeft: 8,
+          }}
           onPress={() => setAddWorkoutModalVisible(true)}
         >
-          <Ionicons name="add" size={24} color="black" />
+          <Ionicons name="add" size={24} color="#000000" />
         </TouchableOpacity>
       </View>
 
       {/* Workouts */}
       <ScrollView>
-        {workoutList.map((workout, workoutIndex) => {
-          const isActive = workoutIndex === activeWorkoutIndex;
+        {Object.values(workoutExercises).map((exercise, index) => {
+          const isActive = index === activeWorkoutIndex;
+          const tracking = exerciseTracking[exercise.id] || { sets: [] };
           return (
             <TouchableOpacity
-              key={workoutIndex}
-              onPress={() => toggleActiveWorkout(workoutIndex)}
-              className={`rounded-3xl w-full mb-2 shadow-2xl shadow-zinc-800  
-                 ${isActive ? "bg-lime-500" : "bg-black"}`}
+              key={exercise.id}
+              onPress={() => toggleActiveWorkout(index)}
+              style={{
+                backgroundColor: isActive ? "#b2f2bb" : "#000000",
+                borderRadius: 24,
+                width: "100%",
+                marginBottom: 8,
+                shadowColor: "#1a202c",
+                shadowOffset: { width: 0, height: 2 },
+                shadowOpacity: 0.8,
+                shadowRadius: 2,
+                elevation: 5,
+              }}
             >
-              <View className="flex-row justify-between items-start mb-2">
+              <View
+                style={{
+                  flexDirection: "row",
+                  justifyContent: "space-between",
+                  alignItems: "flex-start",
+                  marginBottom: 8,
+                }}
+              >
                 <View>
                   <Text
-                    className={` ${
-                      isActive ? "text-black " : "text-lime-500"
-                    } text-2xl pl-4 pt-4 m`}
+                    style={{
+                      color: isActive ? "#000000" : "#a0f0a0",
+                      fontSize: 20,
+                      paddingLeft: 16,
+                      paddingTop: 16,
+                    }}
                   >
-                    {workout.title} {/* Ensure 'title' is correctly set */}
+                    {exercise.title}
                   </Text>
                   <Text
-                    className={` ${
-                      isActive ? "text-black" : " text-gray-200"
-                    }  text-sm pl-6 mt-0 pt-0 `}
+                    style={{
+                      color: isActive ? "#000000" : "#d1d5db",
+                      fontSize: 14,
+                      paddingLeft: 24,
+                      marginTop: 0,
+                      paddingTop: 0,
+                    }}
                   >
-                    Personal Best: {workout.max} lbs
+                    Personal Best: {exercise.max} lbs
                   </Text>
                 </View>
 
                 {/* Icon to trigger the modal */}
                 <TouchableOpacity
-                  onPress={() => showWorkoutInfo(workoutIndex)}
-                  className="p-4"
+                  onPress={() => showWorkoutInfo(exercise)}
+                  style={{ padding: 16 }}
                 >
                   <Ionicons
                     name="information-circle-outline"
                     size={24}
-                    color="white"
+                    color="#ffffff"
                   />
                 </TouchableOpacity>
               </View>
 
               {/* Sets */}
-              <View className="flex-wrap flex-row mt-2 justify-start pb-4 max-w-[100vw] px-4">
-                {workout.sets.map((set, setIndex) => (
+              <View
+                style={{
+                  flexDirection: "row",
+                  flexWrap: "wrap",
+                  marginTop: 8,
+                  justifyContent: "flex-start",
+                  paddingBottom: 16,
+                  paddingHorizontal: 16,
+                }}
+              >
+                {tracking.sets.map((set, setIndex) => (
                   <TouchableOpacity
                     key={setIndex}
-                    onLongPress={() => handleLongPress(workoutIndex, setIndex)}
+                    onLongPress={() => handleLongPress(exercise.id, setIndex)}
                     delayLongPress={500} // Adjust this if needed
-                    style={{ flexBasis: "33%", marginBottom: 5 }} // FlexBasis ensures equal width
+                    style={{ flexBasis: "33%", marginBottom: 5 }}
                   >
                     <View
-                      className={`${
-                        isActive ? "bg-lime-600 " : "bg-lime-500 "
-                      } rounded-lg  mx-1 h-22 flex-row justify-between align-middle items-center`}
+                      style={{
+                        backgroundColor: isActive ? "#a0f0a0" : "#90cdf4",
+                        borderRadius: 8,
+                        marginHorizontal: 4,
+                        height: 88, // Tailwind 'h-22' is approximately 88px
+                        flexDirection: "row",
+                        justifyContent: "space-between",
+                        alignItems: "center",
+                        paddingHorizontal: 8,
+                      }}
                     >
                       <TextInput
-                        className="text-black text-4xl text-center pl-2  font-inconsolata"
+                        style={{
+                          color: "#000000",
+                          fontSize: 32,
+                          textAlign: "center",
+                          paddingLeft: 8,
+                          fontFamily: "Inconsolata",
+                        }}
                         placeholder="000"
-                        placeholderTextColor="black"
+                        placeholderTextColor="#000000"
                         value={set.weight.toString()}
                         editable={isActive}
                         onChangeText={(value) =>
                           handleSetChange(
-                            workoutIndex,
+                            exercise.id,
                             setIndex,
                             "weight",
                             value
                           )
                         }
                         keyboardType="numeric"
-                        maxLength={3} // Changed maxLength to 3 for TextInput
+                        maxLength={3}
                       />
                       <TextInput
-                        className="text-black text-2xl text-center mr-2 font-inconsolata"
+                        style={{
+                          color: "#000000",
+                          fontSize: 24,
+                          textAlign: "center",
+                          marginRight: 8,
+                          fontFamily: "Inconsolata",
+                        }}
                         placeholder="00"
-                        placeholderTextColor="black"
+                        placeholderTextColor="#000000"
                         value={set.reps.toString()}
                         editable={isActive}
                         onChangeText={(value) =>
-                          handleSetChange(workoutIndex, setIndex, "reps", value)
+                          handleSetChange(exercise.id, setIndex, "reps", value)
                         }
                         keyboardType="numeric"
-                        maxLength={2} // Changed maxLength to 2 for TextInput
+                        maxLength={2}
                       />
                     </View>
                   </TouchableOpacity>
@@ -224,11 +369,25 @@ const ExerciseList = ({ exercises, date, allExercises }) => {
 
                 {isActive && (
                   <TouchableOpacity
-                    onPress={() => addSet(workoutIndex)}
-                    className="rounded-lg bg-black h-22 "
-                    style={{ flexBasis: "31%", marginBottom: 5 }} // Same flexBasis for consistent size
+                    onPress={() => addSet(exercise.id)}
+                    style={{
+                      backgroundColor: "#000000",
+                      borderRadius: 8,
+                      flexBasis: "31%",
+                      marginBottom: 5,
+                      justifyContent: "center",
+                      alignItems: "center",
+                      marginHorizontal: 4,
+                      height: 88,
+                    }}
                   >
-                    <Text className="text-lime-500 text-4xl text-center">
+                    <Text
+                      style={{
+                        color: "#a0f0a0",
+                        fontSize: 32,
+                        textAlign: "center",
+                      }}
+                    >
                       +
                     </Text>
                   </TouchableOpacity>
@@ -248,18 +407,34 @@ const ExerciseList = ({ exercises, date, allExercises }) => {
           onRequestClose={() => setModalVisible(false)}
         >
           <View
-            className="flex-1 justify-center items-center bg-black bg-opacity-50"
-            style={{ padding: 20 }}
+            style={{
+              flex: 1,
+              justifyContent: "center",
+              alignItems: "center",
+              backgroundColor: "rgba(0,0,0,0.5)",
+              padding: 20,
+            }}
           >
-            <View className="bg-gray-800 rounded-lg p-5 w-[80vw]">
-              <Text className="text-white text-xl mb-4">
-                {selectedWorkout.title} {/* Ensure 'title' is correctly set */}
+            <View
+              style={{
+                backgroundColor: "#2d3748",
+                borderRadius: 8,
+                padding: 20,
+                width: "80%",
+              }}
+            >
+              <Text
+                style={{ color: "#ffffff", fontSize: 20, marginBottom: 16 }}
+              >
+                {selectedWorkout.title}
               </Text>
-              <Text className="text-white mb-2">
+              <Text style={{ color: "#ffffff", marginBottom: 8 }}>
                 Max: {selectedWorkout.max} lbs
               </Text>
-              <Text className="text-white">Notes:</Text>
-              <Text className="text-white mb-4">{selectedWorkout.notes}</Text>
+              <Text style={{ color: "#ffffff" }}>Notes:</Text>
+              <Text style={{ color: "#ffffff", marginBottom: 16 }}>
+                {selectedWorkout.notes}
+              </Text>
 
               {/* Close button */}
               <Button title="Close" onPress={() => setModalVisible(false)} />
@@ -268,7 +443,7 @@ const ExerciseList = ({ exercises, date, allExercises }) => {
         </Modal>
       )}
 
-      {/* Modal for adding new workout */}
+      {/* Modal for adding new exercise */}
       <Modal
         animationType="slide"
         transparent={true}
@@ -276,28 +451,75 @@ const ExerciseList = ({ exercises, date, allExercises }) => {
         onRequestClose={() => setAddWorkoutModalVisible(false)}
       >
         <View
-          className="flex-1 justify-center items-center bg-black bg-opacity-50"
-          style={{ padding: 20 }}
+          style={{
+            flex: 1,
+            justifyContent: "center",
+            alignItems: "center",
+            backgroundColor: "rgba(0,0,0,0.5)",
+            padding: 20,
+          }}
         >
-          <View className="bg-gray-800 rounded-lg p-5 w-[80vw]">
-            <Text className="text-white text-xl mb-4">Add New Exercise</Text>
-            {/* List of available exercises */}
-            <FlatList
-              data={allExercises}
-              keyExtractor={(item) => item.id}
-              renderItem={({ item }) => (
-                <TouchableOpacity
-                  onPress={() => addNewWorkout(item)}
-                  className="p-2"
-                >
-                  <Text className="text-white">{item.title}</Text>
-                  {/* Removed the {" "} to prevent the error */}
-                </TouchableOpacity>
-              )}
+          <View
+            style={{
+              backgroundColor: "#2d3748",
+              borderRadius: 8,
+              padding: 20,
+              width: "80%",
+            }}
+          >
+            <Text style={{ color: "#ffffff", fontSize: 20, marginBottom: 16 }}>
+              Add New Exercise
+            </Text>
+            <TextInput
+              style={{
+                backgroundColor: "#4a5568",
+                color: "#ffffff",
+                borderRadius: 4,
+                padding: 8,
+                marginBottom: 8,
+              }}
+              placeholder="Exercise Name"
+              placeholderTextColor="#cbd5e0"
+              value={newExercise.title}
+              onChangeText={(value) =>
+                setNewExercise({ ...newExercise, title: value })
+              }
             />
+            <TextInput
+              style={{
+                backgroundColor: "#4a5568",
+                color: "#ffffff",
+                borderRadius: 4,
+                padding: 8,
+                marginBottom: 8,
+              }}
+              placeholder="Max Weight (lbs)"
+              keyboardType="numeric"
+              value={newExercise.max}
+              onChangeText={(value) =>
+                setNewExercise({ ...newExercise, max: value })
+              }
+            />
+            <TextInput
+              style={{
+                backgroundColor: "#4a5568",
+                color: "#ffffff",
+                borderRadius: 4,
+                padding: 8,
+                marginBottom: 8,
+              }}
+              placeholder="Notes (optional)"
+              multiline
+              value={newExercise.notes}
+              onChangeText={(value) =>
+                setNewExercise({ ...newExercise, notes: value })
+              }
+            />
+            <Button title="Add Exercise" onPress={addNewExerciseToWorkout} />
             <Button
               title="Cancel"
               onPress={() => setAddWorkoutModalVisible(false)}
+              color="#e53e3e"
             />
           </View>
         </View>
