@@ -220,26 +220,26 @@ const ExerciseScreen = () => {
         style={{ position: "absolute", width: width, height: height }}
       />
 
-      <View className="pt-16 w-full flex-row justify-between items-center px-4">
+      <View style={{ paddingTop: 60, width: "100%", flexDirection: "row", justifyContent: "space-between", alignItems: "center", paddingHorizontal: 16 }}>
         {/* Home Button with Emoji on the Left */}
         <TouchableOpacity onPress={() => navigation.navigate("Home")}>
-          <Text className="text-white text-2xl">🏠</Text>
+          <Text style={{ color: "#ffffff", fontSize: 32 }}>🏠</Text>
         </TouchableOpacity>
 
         {/* Centered Exercises Text */}
-        <Text className="text-white text-2xl font-silkscreen">Exercises</Text>
+        <Text style={{ color: "#ffffff", fontSize: 24, fontFamily: "Silkscreen", textAlign: "center" }}>Exercises</Text>
 
         {/* Add Button with Emoji on the Right */}
         <TouchableOpacity onPress={() => openModal()}>
-          <Text className="text-white text-2xl">➕</Text>
+          <Text style={{ color: "#ffffff", fontSize: 32 }}>➕</Text>
         </TouchableOpacity>
       </View>
 
       {/* Loading Indicator */}
       {status === "loading" && exercisesFromState.length === 0 && (
-        <View className="flex-1 justify-center items-center">
+        <View style={{ flex: 1, justifyContent: "center", alignItems: "center" }}>
           <ActivityIndicator size="large" color="#00FF00" />
-          <Text className="text-white text-xl m-4 font-bold">
+          <Text style={{ color: "#ffffff", fontSize: 18, marginTop: 10, fontWeight: "bold" }}>
             Loading exercises...
           </Text>
         </View>
@@ -247,7 +247,7 @@ const ExerciseScreen = () => {
 
       {/* Error Message */}
       {status === "failed" && (
-        <Text className="text-red-500 text-center m-4">
+        <Text style={{ color: "red", textAlign: "center", margin: 16 }}>
           Error loading exercises: {errorMessage}
         </Text>
       )}
@@ -255,31 +255,41 @@ const ExerciseScreen = () => {
       {/* Toggle for Max Weight and Last Weight */}
       {status !== "loading" && (
         <>
-          <View className="flex-row justify-center items-center mt-4">
+          <View style={{ flexDirection: "row", justifyContent: "center", alignItems: "center", marginTop: 16 }}>
             <TouchableOpacity
               onPress={() => setWeightDisplayOption("max")}
-              className={`px-4 py-2 m-1 rounded-full ${
-                weightDisplayOption === "max" ? "bg-orange-500" : "bg-gray-200"
-              }`}
+              style={{
+                paddingHorizontal: 16,
+                paddingVertical: 8,
+                marginHorizontal: 4,
+                borderRadius: 9999,
+                backgroundColor: weightDisplayOption === "max" ? "#F97316" : "#E5E7EB",
+              }}
             >
               <Text
-                className={`font-bold ${
-                  weightDisplayOption === "max" ? "text-white" : "text-black"
-                }`}
+                style={{
+                  fontWeight: "bold",
+                  color: weightDisplayOption === "max" ? "#FFFFFF" : "#000000",
+                }}
               >
                 Max Weight
               </Text>
             </TouchableOpacity>
             <TouchableOpacity
               onPress={() => setWeightDisplayOption("last")}
-              className={`px-4 py-2 m-1 rounded-full ${
-                weightDisplayOption === "last" ? "bg-orange-500" : "bg-gray-200"
-              }`}
+              style={{
+                paddingHorizontal: 16,
+                paddingVertical: 8,
+                marginHorizontal: 4,
+                borderRadius: 9999,
+                backgroundColor: weightDisplayOption === "last" ? "#F97316" : "#E5E7EB",
+              }}
             >
               <Text
-                className={`font-bold ${
-                  weightDisplayOption === "last" ? "text-white" : "text-black"
-                }`}
+                style={{
+                  fontWeight: "bold",
+                  color: weightDisplayOption === "last" ? "#FFFFFF" : "#000000",
+                }}
               >
                 Last Weight
               </Text>
@@ -295,8 +305,8 @@ const ExerciseScreen = () => {
               paddingVertical: 8,
             }}
             renderItem={({ item: [group, exercises] }) => (
-              <View key={group}>
-                <Text className="text-white text-xl font-silkscreen mb-2">
+              <View key={group} style={{ marginBottom: 16 }}>
+                <Text style={{ color: "#ffffff", fontSize: 20, marginBottom: 8, fontFamily: "Silkscreen" }}>
                   {group}
                 </Text>
                 {exercises.map((exercise) => {
@@ -313,17 +323,13 @@ const ExerciseScreen = () => {
                       onPress={() => openModal(exercise)}
                       onLongPress={() => confirmDelete(exercise)}
                     >
-                      <View className="mb-4 p-4 bg-zinc-800 rounded-lg shadow-lg flex-row justify-between">
+                      <View style={{ marginBottom: 12, padding: 16, backgroundColor: "#2D3748", borderRadius: 12, flexDirection: "row", justifyContent: "space-between", alignItems: "center" }}>
                         <View style={{ flex: 1 }}>
-                          <Text
-                            className="text-white text-xl font-silkscreen"
-                            numberOfLines={2}
-                            adjustsFontSizeToFit={false}
-                          >
+                          <Text style={{ color: "#ffffff", fontSize: 18, fontFamily: "Silkscreen" }}>
                             {exercise.title}
                           </Text>
                         </View>
-                        <Text className="text-orange-500 text-2xl font-bold">
+                        <Text style={{ color: "#F97316", fontSize: 20, fontWeight: "bold" }}>
                           {displayWeight} lbs
                         </Text>
                       </View>
@@ -334,15 +340,21 @@ const ExerciseScreen = () => {
             )}
             ListEmptyComponent={
               <View style={{ alignItems: "center", marginTop: 20 }}>
-                <Text className="text-white text-lg mb-4 font-silkscreen">
+                <Text style={{ color: "#ffffff", fontSize: 18, marginBottom: 12, fontFamily: "Silkscreen" }}>
                   No exercises found. Would you like to add default exercises?
                 </Text>
                 <TouchableOpacity
                   onPress={handleAddDefaultExercises}
-                  className="bg-green-500 p-3 rounded-lg flex-row items-center"
+                  style={{
+                    flexDirection: "row",
+                    alignItems: "center",
+                    backgroundColor: "#38A169",
+                    padding: 12,
+                    borderRadius: 8,
+                  }}
                 >
                   <Ionicons name="add-circle-outline" size={24} color="white" />
-                  <Text className="text-white text-lg ml-2 font-bold">
+                  <Text style={{ color: "#ffffff", fontSize: 16, marginLeft: 8, fontWeight: "bold" }}>
                     Add Default Exercises
                   </Text>
                 </TouchableOpacity>
@@ -355,7 +367,7 @@ const ExerciseScreen = () => {
       {/* Add/Edit Exercise Modal */}
       <Modal visible={modalVisible} transparent={true} animationType="fade">
         <TouchableWithoutFeedback onPress={Keyboard.dismiss} accessible={false}>
-          <View style={{ flex: 1, backgroundColor: "rgba(0, 0, 0, 0.8)" }}>
+          <View style={{ flex: 1, backgroundColor: "rgba(0, 0, 0, 0.8)", justifyContent: "center", alignItems: "center" }}>
             <KeyboardAvoidingView
               behavior={Platform.OS === "ios" ? "padding" : "height"}
               style={{
@@ -366,8 +378,8 @@ const ExerciseScreen = () => {
               }}
               keyboardVerticalOffset={Platform.OS === "ios" ? 100 : 0}
             >
-              <View className="w-[90%] p-6 bg-zinc-800 rounded-lg shadow-lg mt-20">
-                <Text className="text-white text-2xl mb-4 font-silkscreen">
+              <View style={{ width: "90%", padding: 24, backgroundColor: "#2D3748", borderRadius: 12 }}>
+                <Text style={{ color: "#ffffff", fontSize: 22, marginBottom: 16, fontFamily: "Silkscreen" }}>
                   {isEditing ? "Edit Exercise" : "Add Exercise"}
                 </Text>
 
@@ -381,28 +393,36 @@ const ExerciseScreen = () => {
                       title: text,
                     }))
                   }
-                  className="bg-zinc-800 text-white p-3 rounded-lg border border-white h-12 mb-4 text-lg"
-                  placeholderTextColor="#999"
+                  style={{
+                    backgroundColor: "#4A5568",
+                    color: "#ffffff",
+                    borderRadius: 8,
+                    padding: 12,
+                    marginBottom: 12,
+                    fontSize: 16,
+                  }}
+                  placeholderTextColor="#cbd5e0"
                 />
 
                 {/* Muscle Tags Selector */}
-                <View className="flex-wrap flex-row justify-center p-2">
+                <View style={{ flexWrap: "wrap", flexDirection: "row", justifyContent: "center", padding: 8 }}>
                   {muscleGroups.map((group) => (
                     <TouchableOpacity
                       key={group}
                       onPress={() => toggleMuscleTagSelection(group)}
-                      className={`px-4 py-2 m-1 rounded-full ${
-                        selectedMuscleTags.includes(group)
-                          ? "bg-orange-500"
-                          : "bg-gray-200"
-                      }`}
+                      style={{
+                        paddingHorizontal: 12,
+                        paddingVertical: 6,
+                        margin: 4,
+                        borderRadius: 9999,
+                        backgroundColor: selectedMuscleTags.includes(group) ? "#F97316" : "#E5E7EB",
+                      }}
                     >
                       <Text
-                        className={`font-bold ${
-                          selectedMuscleTags.includes(group)
-                            ? "text-white"
-                            : "text-black"
-                        }`}
+                        style={{
+                          fontWeight: "bold",
+                          color: selectedMuscleTags.includes(group) ? "#FFFFFF" : "#000000",
+                        }}
                       >
                         {group}
                       </Text>
@@ -425,8 +445,15 @@ const ExerciseScreen = () => {
                       max: parseInt(text) || 0,
                     }))
                   }
-                  className="bg-zinc-800 text-white p-3 rounded-lg border border-white h-12 mb-4 text-lg"
-                  placeholderTextColor="#999"
+                  style={{
+                    backgroundColor: "#4A5568",
+                    color: "#ffffff",
+                    borderRadius: 8,
+                    padding: 12,
+                    marginBottom: 12,
+                    fontSize: 16,
+                  }}
+                  placeholderTextColor="#cbd5e0"
                 />
 
                 {/* Notes Input */}
@@ -439,40 +466,70 @@ const ExerciseScreen = () => {
                       notes: text,
                     }))
                   }
-                  className="bg-zinc-800 text-white p-3 rounded-lg border border-white h-12 mb-4 text-lg"
-                  placeholderTextColor="#999"
+                  style={{
+                    backgroundColor: "#4A5568",
+                    color: "#ffffff",
+                    borderRadius: 8,
+                    padding: 12,
+                    marginBottom: 12,
+                    fontSize: 16,
+                    height: 80,
+                    textAlignVertical: "top",
+                  }}
+                  placeholderTextColor="#cbd5e0"
+                  multiline
                 />
 
                 {/* Error Message */}
                 {localErrorMessage ? (
-                  <Text className="text-red-500 mb-4">{localErrorMessage}</Text>
+                  <Text style={{ color: "red", marginBottom: 12, textAlign: "center" }}>
+                    {localErrorMessage}
+                  </Text>
                 ) : null}
 
                 {/* Save and Cancel Buttons */}
-                <View className="flex-row justify-between space-x-2 mb-4">
+                <View style={{ flexDirection: "row", justifyContent: "space-between", marginTop: 8 }}>
                   <TouchableOpacity
                     onPress={() => handleSaveExercise(selectedExercise)}
-                    className="bg-green-500 p-3 rounded-lg flex-1 flex-row justify-center items-center"
+                    style={{
+                      flex: 1,
+                      flexDirection: "row",
+                      justifyContent: "center",
+                      alignItems: "center",
+                      backgroundColor: "#38A169",
+                      padding: 12,
+                      borderRadius: 8,
+                      marginRight: 8,
+                    }}
                   >
                     <Ionicons
                       name="checkmark-circle-outline"
                       size={24}
                       color="white"
                     />
-                    <Text className="text-white text-lg text-center ml-2 font-bold">
+                    <Text style={{ color: "#ffffff", fontSize: 16, marginLeft: 8, fontWeight: "bold" }}>
                       {isEditing ? "Save Changes" : "Add Exercise"}
                     </Text>
                   </TouchableOpacity>
                   <TouchableOpacity
                     onPress={closeModal}
-                    className="bg-red-500 p-3 rounded-lg flex-1 flex-row justify-center items-center"
+                    style={{
+                      flex: 1,
+                      flexDirection: "row",
+                      justifyContent: "center",
+                      alignItems: "center",
+                      backgroundColor: "#E53E3E",
+                      padding: 12,
+                      borderRadius: 8,
+                      marginLeft: 8,
+                    }}
                   >
                     <Ionicons
                       name="close-circle-outline"
                       size={24}
                       color="white"
                     />
-                    <Text className="text-white text-lg text-center ml-2 font-bold">
+                    <Text style={{ color: "#ffffff", fontSize: 16, marginLeft: 8, fontWeight: "bold" }}>
                       Cancel
                     </Text>
                   </TouchableOpacity>
