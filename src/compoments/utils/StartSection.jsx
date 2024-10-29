@@ -1,6 +1,4 @@
-// src/components/utils/StartSection.js
-
-import React, { useState, useEffect, useRef, useCallback } from "react";
+import React, { useState, useEffect } from "react";
 import {
   TouchableOpacity,
   Text,
@@ -8,85 +6,39 @@ import {
   ScrollView,
   Modal,
   FlatList,
-  ActivityIndicator,
-  BackHandler,
-  Alert,
-  Dimensions,
 } from "react-native";
 import { MaterialIcons } from "@expo/vector-icons";
-import { useDispatch } from "react-redux";
-import { useNavigation, useFocusEffect } from "@react-navigation/native";
-import { addOrUpdateWorkoutInFirestore } from "../../redux/slices/workoutsSlice"; // Ensure correct path
+import { useSelector, useDispatch } from "react-redux";
+import { updateWorkoutInFirestore } from "../../redux/slices/workoutSlice";
 
-const StartSection = ({ todayWorkout, date, isLoading }) => {
+const StartSection = () => {
   const dispatch = useDispatch();
-  const navigation = useNavigation();
 
-  // Local state
-  const [isChecked, setIsChecked] = useState(undefined);
-  const [isCardioChecked, setIsCardioChecked] = useState(undefined);
+  // Access workout data from Redux store
+  const workoutData = useSelector((state) => state.workout.data);
+
+  // Local state initialized from Redux store data
+  const [isChecked, setIsChecked] = useState(workoutData?.stretch || false);
+  const [isCardioChecked, setIsCardioChecked] = useState(
+    workoutData?.cardio || false
+  );
   const [lastCompleted, setLastCompleted] = useState(null);
-  const [selectedMinutes, setSelectedMinutes] = useState(undefined);
-  const [selectedExercise, setSelectedExercise] = useState(undefined);
+  const [selectedMinutes, setSelectedMinutes] = useState(
+    workoutData?.cardioLength || 10
+  );
+  const [selectedExercise, setSelectedExercise] = useState(
+    workoutData?.cardioType || "treadmill"
+  );
   const [minutesModalVisible, setMinutesModalVisible] = useState(false);
   const [exerciseModalVisible, setExerciseModalVisible] = useState(false);
 
-  const isInitialMount = useRef(true);
-
-  // Initialize local state when todayWorkout is loaded
   useEffect(() => {
-    if (!isLoading && todayWorkout) {
-      setIsChecked(todayWorkout.stretch);
-      setIsCardioChecked(todayWorkout.cardioCompleted);
-      setSelectedMinutes(todayWorkout.cardio?.time || 10);
-      setSelectedExercise(todayWorkout.cardio?.type || "treadmill");
-    }
-  }, [todayWorkout, isLoading]);
-
-  // Update Firestore when state changes, but skip initial mount
-  useEffect(() => {
-    if (isInitialMount.current || isLoading || isChecked === undefined) {
-      isInitialMount.current = false;
-      return;
-    }
-
-    // Prepare the updated workout object
-    const updatedWorkout = {
-      ...todayWorkout,
-      stretch: isChecked,
-      cardio: {
-        type: selectedExercise,
-        time: selectedMinutes,
-      },
-      cardioCompleted: isCardioChecked,
-    };
-
-    // Function to check if two objects are equal (shallow comparison)
-    const isEqual = (obj1, obj2) => {
-      return (
-        obj1.stretch === obj2.stretch &&
-        obj1.cardioCompleted === obj2.cardioCompleted &&
-        obj1.cardio?.type === obj2.cardio?.type &&
-        obj1.cardio?.time === obj2.cardio?.time
-      );
-    };
-
-    // Only dispatch if there's a change
-    if (!isEqual(updatedWorkout, todayWorkout)) {
-      dispatch(
-        addOrUpdateWorkoutInFirestore({ date, workout: updatedWorkout })
-      );
-    }
-  }, [
-    isChecked,
-    isCardioChecked,
-    selectedExercise,
-    selectedMinutes,
-    todayWorkout,
-    date,
-    dispatch,
-    isLoading,
-  ]);
+    // Update local state when workoutData changes
+    setIsChecked(workoutData?.stretch || false);
+    setIsCardioChecked(workoutData?.cardio || false);
+    setSelectedMinutes(workoutData?.cardioLength || 10);
+    setSelectedExercise(workoutData?.cardioType || "treadmill");
+  }, [workoutData]);
 
   const motivationalQuotes = [
     "You’re doing great, keep going!",
@@ -97,17 +49,33 @@ const StartSection = ({ todayWorkout, date, isLoading }) => {
   ];
 
   const handleCheckBoxPress = () => {
-    setIsChecked((prev) => !prev); // Toggle stretch checkbox
-    if (!isChecked) {
+    const newStretchValue = !isChecked;
+    setIsChecked(newStretchValue);
+    if (newStretchValue) {
       setLastCompleted("stretch");
     }
+    // Update in Firebase
+    dispatch(
+      updateWorkoutInFirestore({
+        ...workoutData,
+        stretch: newStretchValue,
+      })
+    );
   };
 
   const handleCardioCheckBoxPress = () => {
-    setIsCardioChecked((prev) => !prev); // Toggle cardio checkbox
-    if (!isCardioChecked) {
+    const newCardioValue = !isCardioChecked;
+    setIsCardioChecked(newCardioValue);
+    if (newCardioValue) {
       setLastCompleted("cardio");
     }
+    // Update in Firebase
+    dispatch(
+      updateWorkoutInFirestore({
+        ...workoutData,
+        cardio: newCardioValue,
+      })
+    );
   };
 
   const exercises = [
@@ -125,104 +93,60 @@ const StartSection = ({ todayWorkout, date, isLoading }) => {
   const handleExerciseSelect = (exercise) => {
     setSelectedExercise(exercise.value);
     closeExerciseModal();
+    // Update in Firebase
+    dispatch(
+      updateWorkoutInFirestore({
+        ...workoutData,
+        cardioType: exercise.value,
+      })
+    );
   };
 
   const handleMinutesSelect = (minute) => {
     setSelectedMinutes(minute);
     closeMinutesModal();
+    // Update in Firebase
+    dispatch(
+      updateWorkoutInFirestore({
+        ...workoutData,
+        cardioLength: minute,
+      })
+    );
   };
 
   const undoLastComplete = () => {
     if (lastCompleted === "stretch") {
       setIsChecked(false);
+      dispatch(
+        updateWorkoutInFirestore({
+          ...workoutData,
+          stretch: false,
+        })
+      );
     } else if (lastCompleted === "cardio") {
       setIsCardioChecked(false);
+      dispatch(
+        updateWorkoutInFirestore({
+          ...workoutData,
+          cardio: false,
+        })
+      );
     }
     setLastCompleted(null);
   };
 
   const bothComplete = isChecked && isCardioChecked;
 
-  // Handle Hardware Back Button (Android)
-  useEffect(() => {
-    const backAction = () => {
-      if (bothComplete) {
-        Alert.alert(
-          "Undo Last Action",
-          "Do you want to undo the last completed action?",
-          [
-            {
-              text: "Cancel",
-              onPress: () => null,
-              style: "cancel",
-            },
-            { text: "YES", onPress: undoLastComplete },
-          ]
-        );
-        return true; // Prevent default behavior
-      }
-      return false; // Allow default behavior
-    };
-
-    const backHandler = BackHandler.addEventListener(
-      "hardwareBackPress",
-      backAction
-    );
-
-    return () => backHandler.remove();
-  }, [bothComplete, undoLastComplete]);
-
-  // Handle Navigation Back Button
-  useFocusEffect(
-    useCallback(() => {
-      const onBackPress = () => {
-        if (bothComplete) {
-          Alert.alert(
-            "Undo Last Action",
-            "Do you want to undo the last completed action?",
-            [
-              {
-                text: "Cancel",
-                onPress: () => null,
-                style: "cancel",
-              },
-              { text: "YES", onPress: undoLastComplete },
-            ]
-          );
-          return true; // Prevent default behavior
-        }
-        return false; // Allow default behavior
-      };
-
-      const unsubscribe = navigation.addListener("beforeRemove", (e) => {
-        e.preventDefault();
-        onBackPress();
-      });
-
-      return unsubscribe;
-    }, [bothComplete, undoLastComplete, navigation])
-  );
-
-  // If data is still loading, show a loading indicator
-  if (isLoading || isChecked === undefined) {
-    return (
-      <View style={styles.loadingContainer}>
-        <ActivityIndicator size="large" color="#00d1b2" />
-        <Text style={styles.loadingText}>Loading your workout...</Text>
-      </View>
-    );
-  }
-
   return (
-    <View className="flex px-4">
+    <View className="h-40 mb-4">
       {bothComplete ? (
-        <View className=" bg-blue-500 rounded-3xl justify-center items-center relative p-4 h-40">
+        <View className="flex-1 h-40 bg-blue-500 mx-2 w-fit rounded-3xl justify-center items-center relative">
           <TouchableOpacity
-            className="absolute top-2 left-2 p-1 border-2 border-blue-900 rounded-full"
+            className="absolute top-0 left-0 p-1 m-2 border-2 border-blue-900 rounded-full"
             onPress={undoLastComplete}
-            style={{ zIndex: 10 }} // Ensures the button stays above the quote
+            style={{ zIndex: 10 }}
           >
-            <MaterialIcons name="undo" size={24} color="black" />
+            <MaterialIcons name="undo" size={18} color="black" />
           </TouchableOpacity>
           <Text className="text-white text-lg text-center px-6">
             {
@@ -233,27 +157,30 @@ const StartSection = ({ todayWorkout, date, isLoading }) => {
           </Text>
         </View>
       ) : (
-        <View className="flex-row justify-between">
+        <View className="flex-row h-40 justify-around">
           {/* Stretch Tile */}
           <TouchableOpacity
-            className="bg-lime-500 shadow-xl shadow-zinc-800 rounded-3xl flex-1 p-4"
+            className="bg-lime-500  shadow-xl
+                    shadow-zinc-800  ml-2 rounded-3xl w-[45vw] p-4"
             onPress={handleCheckBoxPress}
           >
-            <View className="flex-row justify-between items-center">
+            <View className="flex-row justify-around items-center">
               <View>
-                <Text className="text-black text-2xl font-bold">Stretch</Text>
-                <View className="pt-4">
+                <Text className="text-black text-2xl pl-2 font-bold">
+                  Stretch
+                </Text>
+                <View className="pt-4 pl-2">
                   <MaterialIcons
                     name={isChecked ? "check-box" : "check-box-outline-blank"}
-                    size={32}
+                    size={48}
                     color="black"
                   />
                 </View>
               </View>
-              <View className="justify-center items-center">
+              <View className="justify-center items-center w-1/3">
                 <MaterialIcons
                   name="self-improvement"
-                  size={32}
+                  size={56}
                   color="black"
                 />
               </View>
@@ -261,41 +188,44 @@ const StartSection = ({ todayWorkout, date, isLoading }) => {
           </TouchableOpacity>
 
           {/* Cardio Tile */}
-          <View className="bg-orange-500  shadow-xl shadow-zinc-800 rounded-3xl flex-1 p-4 ml-4 flex-row justify-between items-center">
-            <View className="w-2/3">
-              <Text className="text-black text-2xl font-bold">Cardio</Text>
-              <View className="pt-4">
+          <View className="bg-orange-500 mx-2 shadow-xl shadow-zinc-800 rounded-3xl w-[45vw]  flex-row justify-around items-center">
+            <View className="w-3/5 ">
+              <Text className="text-black text-2xl pl-4 font-bold">Cardio</Text>
+              <View className="pt-4 pl-4">
                 <MaterialIcons
                   name={
                     isCardioChecked ? "check-box" : "check-box-outline-blank"
                   }
-                  size={32}
+                  size={48}
                   color="black"
                   onPress={handleCardioCheckBoxPress}
                 />
               </View>
             </View>
 
-            <View className="w-1/3 flex-row justify-end items-center">
+            <View className="right-4 w-2/5 ">
               {/* Custom Picker for exercise type */}
               <TouchableOpacity
-                className="rounded-lg mr-2"
+                className="rounded-lg"
                 onPress={openExerciseModal}
               >
-                <MaterialIcons
-                  name={
-                    exercises.find((ex) => ex.value === selectedExercise)?.icon
-                  }
-                  size={32}
-                  color="black"
-                />
+                <View className="pl-4 pt-1 ">
+                  <MaterialIcons
+                    name={
+                      exercises.find((ex) => ex.value === selectedExercise)
+                        ?.icon
+                    }
+                    size={64}
+                    color="black"
+                  />
+                </View>
               </TouchableOpacity>
               {/* Custom Dropdown for cardio minutes */}
               <TouchableOpacity
-                className="rounded-lg shadow px-2 py-1"
+                className="pl-3 rounded-lg shadow"
                 onPress={openMinutesModal}
               >
-                <Text className="text-black text-lg font-semibold">
+                <Text className="text-black text-lg justify-start font-semibold">
                   {selectedMinutes} min
                 </Text>
               </TouchableOpacity>
@@ -311,15 +241,15 @@ const StartSection = ({ todayWorkout, date, isLoading }) => {
           >
             <View
               className="flex-1 justify-center items-center"
-              style={{ backgroundColor: "rgba(0, 0, 0, 0.5)" }}
+              style={{ backgroundColor: "rgba(0, 0, 0, 0.8)" }}
             >
               <View className="bg-orange-500 rounded-lg w-3/4 p-4">
                 <Text className="text-2xl mb-4">Select Duration</Text>
-                <ScrollView style={{ maxHeight: 300 }}>
+                <ScrollView style={{ maxHeight: 400 }}>
                   {[...Array(60).keys()].map((x) => (
                     <TouchableOpacity
                       key={x + 1}
-                      className="p-2"
+                      className="p-4"
                       onPress={() => handleMinutesSelect(x + 1)}
                     >
                       <Text className="text-xl">{x + 1} minutes</Text>
@@ -342,7 +272,7 @@ const StartSection = ({ todayWorkout, date, isLoading }) => {
           >
             <View
               className="flex-1 justify-center items-center"
-              style={{ backgroundColor: "rgba(0, 0, 0, 0.5)" }}
+              style={{ backgroundColor: "rgba(0, 0, 0, 0.8)" }}
             >
               <View className="bg-orange-500 rounded-lg w-3/4 p-4">
                 <Text className="text-2xl mb-4 text-black">
@@ -353,11 +283,11 @@ const StartSection = ({ todayWorkout, date, isLoading }) => {
                   keyExtractor={(item) => item.value}
                   renderItem={({ item }) => (
                     <TouchableOpacity
-                      className="p-2 flex-row justify-between"
+                      className="p-4 flex-row justify-between"
                       onPress={() => handleExerciseSelect(item)}
                     >
                       <Text className="text-xl">{item.label}</Text>
-                      <MaterialIcons name={item.icon} size={24} color="black" />
+                      <MaterialIcons name={item.icon} size={32} color="black" />
                     </TouchableOpacity>
                   )}
                 />
@@ -371,20 +301,6 @@ const StartSection = ({ todayWorkout, date, isLoading }) => {
       )}
     </View>
   );
-};
-
-const styles = {
-  loadingContainer: {
-    flex: 1,
-    justifyContent: "center",
-    alignItems: "center",
-    backgroundColor: "#1a202c",
-  },
-  loadingText: {
-    marginTop: 16,
-    fontSize: 18,
-    color: "#ffffff",
-  },
 };
 
 export default StartSection;

@@ -5,6 +5,7 @@ import authReducer from "./slices/authSlice";
 import userReducer from "./slices/userSlice";
 import muscleTagReducer from "./slices/muscleTagsSlice";
 import exerciseReducer from "./slices/exerciseSlice";
+import workoutReducer from "./slices/workoutSlice";
 
 export const store = configureStore({
   reducer: {
@@ -12,6 +13,8 @@ export const store = configureStore({
     user: userReducer,
     muscleTags: muscleTagReducer,
     exercises: exerciseReducer,
+    workout: workoutReducer
+
   },
   middleware: (getDefaultMiddleware) =>
     getDefaultMiddleware({

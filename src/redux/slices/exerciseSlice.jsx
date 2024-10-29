@@ -2,34 +2,31 @@
 
 import { createSlice, createAsyncThunk } from "@reduxjs/toolkit";
 import {
-  getFirestore,
   collection,
-  doc,
-  setDoc,
-  getDocs,
   addDoc,
+  getDocs,
+  setDoc,
   deleteDoc,
+  doc,
 } from "firebase/firestore";
-import { getAuth } from "firebase/auth";
+import { auth, db } from "../../api/firebase"; // Import Firestore and Auth instances
 
 // Async thunk for loading exercises from Firestore
 export const loadExercises = createAsyncThunk(
   "exercises/loadExercises",
   async (_, { rejectWithValue }) => {
     try {
-      const auth = getAuth();
       const user = auth.currentUser;
       if (!user) throw new Error("No user authenticated");
 
       const userId = user.uid;
-      const db = getFirestore();
       const exercisesRef = collection(db, "users", userId, "exercises");
 
       // Fetch exercises data from Firestore
       const querySnapshot = await getDocs(exercisesRef);
       const exercises = [];
-      querySnapshot.forEach((doc) => {
-        exercises.push({ id: doc.id, ...doc.data() });
+      querySnapshot.forEach((docSnap) => {
+        exercises.push({ id: docSnap.id, ...docSnap.data() });
       });
 
       return exercises;
@@ -44,12 +41,10 @@ export const addExerciseToFirestore = createAsyncThunk(
   "exercises/addExerciseToFirestore",
   async (exercise, { rejectWithValue }) => {
     try {
-      const auth = getAuth();
       const user = auth.currentUser;
       if (!user) throw new Error("No user authenticated");
 
       const userId = user.uid;
-      const db = getFirestore();
       const exercisesRef = collection(db, "users", userId, "exercises");
 
       // Add exercise to Firestore (Firebase will generate an ID)
@@ -68,16 +63,14 @@ export const updateExerciseInFirestore = createAsyncThunk(
   "exercises/updateExerciseInFirestore",
   async (exercise, { rejectWithValue }) => {
     try {
-      const auth = getAuth();
       const user = auth.currentUser;
       if (!user) throw new Error("No user authenticated");
 
       const userId = user.uid;
-      const db = getFirestore();
       const exerciseDocRef = doc(db, "users", userId, "exercises", exercise.id);
 
       // Update exercise in Firestore
-      await setDoc(exerciseDocRef, exercise);
+      await setDoc(exerciseDocRef, exercise, { merge: true });
 
       return exercise;
     } catch (error) {
@@ -91,12 +84,10 @@ export const deleteExerciseFromFirestore = createAsyncThunk(
   "exercises/deleteExerciseFromFirestore",
   async (exerciseId, { rejectWithValue }) => {
     try {
-      const auth = getAuth();
       const user = auth.currentUser;
       if (!user) throw new Error("No user authenticated");
 
       const userId = user.uid;
-      const db = getFirestore();
       const exerciseDocRef = doc(db, "users", userId, "exercises", exerciseId);
 
       // Delete exercise from Firestore
@@ -109,57 +100,92 @@ export const deleteExerciseFromFirestore = createAsyncThunk(
   }
 );
 
+// Initial state for the slice
+const initialState = {
+  data: [],
+  fetchStatus: "idle", // 'idle' | 'loading' | 'succeeded' | 'failed'
+  fetchError: null,
+  addStatus: "idle",
+  addError: null,
+  updateStatus: "idle",
+  updateError: null,
+  deleteStatus: "idle",
+  deleteError: null,
+};
+
+// Create the slice
 const exercisesSlice = createSlice({
   name: "exercises",
-  initialState: {
-    data: [],
-    status: "idle",
-    error: null,
+  initialState,
+  reducers: {
+    // You can add synchronous actions here if needed
   },
-  reducers: {},
   extraReducers: (builder) => {
     builder
       // Load Exercises
       .addCase(loadExercises.pending, (state) => {
-        state.status = "loading";
+        state.fetchStatus = "loading";
+        state.fetchError = null;
       })
       .addCase(loadExercises.fulfilled, (state, action) => {
-        state.status = "succeeded";
+        state.fetchStatus = "succeeded";
         state.data = action.payload;
       })
       .addCase(loadExercises.rejected, (state, action) => {
-        state.status = "failed";
-        state.error = action.payload;
+        state.fetchStatus = "failed";
+        state.fetchError = action.payload;
       })
+
       // Add Exercise
+      .addCase(addExerciseToFirestore.pending, (state) => {
+        state.addStatus = "loading";
+        state.addError = null;
+      })
       .addCase(addExerciseToFirestore.fulfilled, (state, action) => {
+        state.addStatus = "succeeded";
         state.data.push(action.payload);
       })
+      .addCase(addExerciseToFirestore.rejected, (state, action) => {
+        state.addStatus = "failed";
+        state.addError = action.payload;
+      })
+
       // Update Exercise
+      .addCase(updateExerciseInFirestore.pending, (state) => {
+        state.updateStatus = "loading";
+        state.updateError = null;
+      })
       .addCase(updateExerciseInFirestore.fulfilled, (state, action) => {
-        const index = state.data.findIndex((ex) => ex.id === action.payload.id);
+        state.updateStatus = "succeeded";
+        const index = state.data.findIndex(
+          (exercise) => exercise.id === action.payload.id
+        );
         if (index !== -1) {
           state.data[index] = action.payload;
         }
       })
-      // Delete Exercise
-      .addCase(deleteExerciseFromFirestore.fulfilled, (state, action) => {
-        state.data = state.data.filter((ex) => ex.id !== action.payload);
+      .addCase(updateExerciseInFirestore.rejected, (state, action) => {
+        state.updateStatus = "failed";
+        state.updateError = action.payload;
       })
-      // Handle errors
-      .addMatcher(
-        (action) =>
-          action.type.endsWith("rejected") &&
-          [
-            "addExerciseToFirestore",
-            "updateExerciseInFirestore",
-            "deleteExerciseFromFirestore",
-          ].includes(action.type.split("/")[1]),
-        (state, action) => {
-          state.error = action.payload;
-        }
-      );
+
+      // Delete Exercise
+      .addCase(deleteExerciseFromFirestore.pending, (state) => {
+        state.deleteStatus = "loading";
+        state.deleteError = null;
+      })
+      .addCase(deleteExerciseFromFirestore.fulfilled, (state, action) => {
+        state.deleteStatus = "succeeded";
+        state.data = state.data.filter(
+          (exercise) => exercise.id !== action.payload
+        );
+      })
+      .addCase(deleteExerciseFromFirestore.rejected, (state, action) => {
+        state.deleteStatus = "failed";
+        state.deleteError = action.payload;
+      });
   },
 });
 
+// Export the reducer to be included in the store
 export default exercisesSlice.reducer;

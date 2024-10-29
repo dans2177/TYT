@@ -1,12 +1,8 @@
-// Unique ID generator function
-const generateUniqueId = () => {
-  return Date.now().toString(36) + Math.random().toString(36).substr(2, 9);
-};
+// src/components/utils/ExerciseDefaults.js
 
 export const defaultExercises = [
   // Chest Exercises
   {
-    id: generateUniqueId(),
     title: "Bench Press",
     muscleTags: ["Chest", "Triceps", "Shoulders"],
     lastUsed: "20/10/24",
@@ -16,7 +12,6 @@ export const defaultExercises = [
     notes: "",
   },
   {
-    id: generateUniqueId(),
     title: "Incline Bench Press",
     muscleTags: ["Chest", "Shoulders", "Triceps"],
     lastUsed: "20/10/24",
@@ -26,7 +21,6 @@ export const defaultExercises = [
     notes: "",
   },
   {
-    id: generateUniqueId(),
     title: "Dumbbell Flyes",
     muscleTags: ["Chest"],
     lastUsed: "20/10/24",
@@ -36,7 +30,6 @@ export const defaultExercises = [
     notes: "",
   },
   {
-    id: generateUniqueId(),
     title: "Push-Ups",
     muscleTags: ["Chest", "Triceps", "Shoulders"],
     lastUsed: "20/10/24",
@@ -46,7 +39,6 @@ export const defaultExercises = [
     notes: "",
   },
   {
-    id: generateUniqueId(),
     title: "Cable Crossovers",
     muscleTags: ["Chest"],
     lastUsed: "20/10/24",
@@ -58,7 +50,6 @@ export const defaultExercises = [
 
   // Back Exercises
   {
-    id: generateUniqueId(),
     title: "Pull-Ups",
     muscleTags: ["Lats", "Biceps"],
     lastUsed: "20/10/24",
@@ -68,7 +59,6 @@ export const defaultExercises = [
     notes: "",
   },
   {
-    id: generateUniqueId(),
     title: "Lat Pulldowns",
     muscleTags: ["Lats", "Biceps"],
     lastUsed: "20/10/24",
@@ -78,7 +68,6 @@ export const defaultExercises = [
     notes: "",
   },
   {
-    id: generateUniqueId(),
     title: "Bent-Over Rows",
     muscleTags: ["Lats", "Biceps", "Lower Back"],
     lastUsed: "20/10/24",
@@ -88,7 +77,6 @@ export const defaultExercises = [
     notes: "",
   },
   {
-    id: generateUniqueId(),
     title: "Seated Cable Rows",
     muscleTags: ["Lats", "Biceps"],
     lastUsed: "20/10/24",
@@ -100,7 +88,6 @@ export const defaultExercises = [
 
   // Shoulder Exercises
   {
-    id: generateUniqueId(),
     title: "Military Press",
     muscleTags: ["Shoulders", "Triceps"],
     lastUsed: "20/10/24",
@@ -110,7 +97,6 @@ export const defaultExercises = [
     notes: "",
   },
   {
-    id: generateUniqueId(),
     title: "Dumbbell Lateral Raises",
     muscleTags: ["Shoulders"],
     lastUsed: "20/10/24",
@@ -120,7 +106,6 @@ export const defaultExercises = [
     notes: "",
   },
   {
-    id: generateUniqueId(),
     title: "Front Raises",
     muscleTags: ["Shoulders"],
     lastUsed: "20/10/24",
@@ -130,7 +115,6 @@ export const defaultExercises = [
     notes: "",
   },
   {
-    id: generateUniqueId(),
     title: "Rear Delt Flyes",
     muscleTags: ["Shoulders"],
     lastUsed: "20/10/24",
@@ -142,7 +126,6 @@ export const defaultExercises = [
 
   // Bicep Exercises
   {
-    id: generateUniqueId(),
     title: "Barbell Curls",
     muscleTags: ["Biceps"],
     lastUsed: "20/10/24",
@@ -152,7 +135,6 @@ export const defaultExercises = [
     notes: "",
   },
   {
-    id: generateUniqueId(),
     title: "Hammer Curls",
     muscleTags: ["Biceps", "Forearms"],
     lastUsed: "20/10/24",
@@ -162,7 +144,6 @@ export const defaultExercises = [
     notes: "",
   },
   {
-    id: generateUniqueId(),
     title: "Concentration Curls",
     muscleTags: ["Biceps"],
     lastUsed: "20/10/24",
@@ -174,7 +155,6 @@ export const defaultExercises = [
 
   // Tricep Exercises
   {
-    id: generateUniqueId(),
     title: "Tricep Pushdowns",
     muscleTags: ["Triceps"],
     lastUsed: "20/10/24",
@@ -184,7 +164,6 @@ export const defaultExercises = [
     notes: "",
   },
   {
-    id: generateUniqueId(),
     title: "Skull Crushers",
     muscleTags: ["Triceps"],
     lastUsed: "20/10/24",
@@ -194,7 +173,6 @@ export const defaultExercises = [
     notes: "",
   },
   {
-    id: generateUniqueId(),
     title: "Close Grip Bench Press",
     muscleTags: ["Triceps", "Chest"],
     lastUsed: "20/10/24",
@@ -206,7 +184,6 @@ export const defaultExercises = [
 
   // Leg Exercises (Quads and Hamstrings)
   {
-    id: generateUniqueId(),
     title: "Squat",
     muscleTags: ["Quads", "Glutes", "Hamstrings"],
     lastUsed: "20/10/24",
@@ -216,7 +193,6 @@ export const defaultExercises = [
     notes: "",
   },
   {
-    id: generateUniqueId(),
     title: "Leg Press",
     muscleTags: ["Quads", "Glutes"],
     lastUsed: "20/10/24",
@@ -226,7 +202,6 @@ export const defaultExercises = [
     notes: "",
   },
   {
-    id: generateUniqueId(),
     title: "Lunges",
     muscleTags: ["Quads", "Glutes", "Hamstrings"],
     lastUsed: "20/10/24",
@@ -236,7 +211,6 @@ export const defaultExercises = [
     notes: "",
   },
   {
-    id: generateUniqueId(),
     title: "Romanian Deadlifts",
     muscleTags: ["Hamstrings", "Glutes", "Lower Back"],
     lastUsed: "20/10/24",
@@ -248,7 +222,6 @@ export const defaultExercises = [
 
   // Calf Exercises
   {
-    id: generateUniqueId(),
     title: "Standing Calf Raises",
     muscleTags: ["Calves"],
     lastUsed: "20/10/24",
@@ -258,7 +231,6 @@ export const defaultExercises = [
     notes: "",
   },
   {
-    id: generateUniqueId(),
     title: "Seated Calf Raises",
     muscleTags: ["Calves"],
     lastUsed: "20/10/24",
@@ -270,7 +242,6 @@ export const defaultExercises = [
 
   // Abdominal Exercises
   {
-    id: generateUniqueId(),
     title: "Crunches",
     muscleTags: ["Abs"],
     lastUsed: "20/10/24",
@@ -280,7 +251,6 @@ export const defaultExercises = [
     notes: "",
   },
   {
-    id: generateUniqueId(),
     title: "Planks",
     muscleTags: ["Abs", "Lower Back"],
     lastUsed: "20/10/24",
@@ -290,7 +260,6 @@ export const defaultExercises = [
     notes: "",
   },
   {
-    id: generateUniqueId(),
     title: "Russian Twists",
     muscleTags: ["Abs", "Obliques"],
     lastUsed: "20/10/24",
@@ -302,7 +271,6 @@ export const defaultExercises = [
 
   // Forearm Exercises
   {
-    id: generateUniqueId(),
     title: "Wrist Curls",
     muscleTags: ["Forearms"],
     lastUsed: "20/10/24",
@@ -312,7 +280,6 @@ export const defaultExercises = [
     notes: "",
   },
   {
-    id: generateUniqueId(),
     title: "Reverse Wrist Curls",
     muscleTags: ["Forearms"],
     lastUsed: "20/10/24",
@@ -324,7 +291,6 @@ export const defaultExercises = [
 
   // Trapezius Exercises
   {
-    id: generateUniqueId(),
     title: "Shrugs",
     muscleTags: ["Traps"],
     lastUsed: "20/10/24",
@@ -334,7 +300,6 @@ export const defaultExercises = [
     notes: "",
   },
   {
-    id: generateUniqueId(),
     title: "Upright Rows",
     muscleTags: ["Traps", "Shoulders"],
     lastUsed: "20/10/24",
@@ -346,7 +311,6 @@ export const defaultExercises = [
 
   // Lower Back Exercises
   {
-    id: generateUniqueId(),
     title: "Deadlift",
     muscleTags: ["Hamstrings", "Lower Back", "Glutes"],
     lastUsed: "20/10/24",
@@ -356,7 +320,6 @@ export const defaultExercises = [
     notes: "",
   },
   {
-    id: generateUniqueId(),
     title: "Hyperextensions",
     muscleTags: ["Lower Back", "Glutes", "Hamstrings"],
     lastUsed: "20/10/24",
@@ -368,7 +331,6 @@ export const defaultExercises = [
 
   // Oblique Exercises
   {
-    id: generateUniqueId(),
     title: "Side Planks",
     muscleTags: ["Obliques", "Abs"],
     lastUsed: "20/10/24",
@@ -380,7 +342,6 @@ export const defaultExercises = [
 
   // Additional Exercises to Reach 50
   {
-    id: generateUniqueId(),
     title: "Leg Extensions",
     muscleTags: ["Quads"],
     lastUsed: "20/10/24",
@@ -390,7 +351,6 @@ export const defaultExercises = [
     notes: "",
   },
   {
-    id: generateUniqueId(),
     title: "Good Mornings",
     muscleTags: ["Hamstrings", "Lower Back", "Glutes"],
     lastUsed: "20/10/24",
@@ -400,7 +360,6 @@ export const defaultExercises = [
     notes: "",
   },
   {
-    id: generateUniqueId(),
     title: "Hip Thrusts",
     muscleTags: ["Glutes", "Hamstrings"],
     lastUsed: "20/10/24",
@@ -410,7 +369,6 @@ export const defaultExercises = [
     notes: "",
   },
   {
-    id: generateUniqueId(),
     title: "Glute Bridges",
     muscleTags: ["Glutes", "Hamstrings"],
     lastUsed: "20/10/24",
@@ -420,7 +378,6 @@ export const defaultExercises = [
     notes: "",
   },
   {
-    id: generateUniqueId(),
     title: "Step-Ups",
     muscleTags: ["Quads", "Glutes"],
     lastUsed: "20/10/24",
@@ -430,7 +387,6 @@ export const defaultExercises = [
     notes: "",
   },
   {
-    id: generateUniqueId(),
     title: "Cable Pull-Throughs",
     muscleTags: ["Glutes", "Hamstrings"],
     lastUsed: "20/10/24",
@@ -442,7 +398,6 @@ export const defaultExercises = [
 
   // Cardio Exercises
   {
-    id: generateUniqueId(),
     title: "Jump Rope",
     muscleTags: ["Calves"],
     lastUsed: "20/10/24",
@@ -454,7 +409,6 @@ export const defaultExercises = [
 
   // Additional Arm Exercises
   {
-    id: generateUniqueId(),
     title: "Overhead Tricep Extension",
     muscleTags: ["Triceps"],
     lastUsed: "20/10/24",
@@ -464,7 +418,6 @@ export const defaultExercises = [
     notes: "",
   },
   {
-    id: generateUniqueId(),
     title: "Preacher Curls",
     muscleTags: ["Biceps"],
     lastUsed: "20/10/24",
@@ -476,7 +429,6 @@ export const defaultExercises = [
 
   // Additional Shoulder Exercises
   {
-    id: generateUniqueId(),
     title: "Arnold Press",
     muscleTags: ["Shoulders", "Triceps"],
     lastUsed: "20/10/24",
@@ -488,7 +440,6 @@ export const defaultExercises = [
 
   // Additional Ab Exercises
   {
-    id: generateUniqueId(),
     title: "Leg Raises",
     muscleTags: ["Abs"],
     lastUsed: "20/10/24",
@@ -500,7 +451,6 @@ export const defaultExercises = [
 
   // Additional Back Exercises
   {
-    id: generateUniqueId(),
     title: "T-Bar Rows",
     muscleTags: ["Lats", "Biceps"],
     lastUsed: "20/10/24",
@@ -512,7 +462,6 @@ export const defaultExercises = [
 
   // Additional Forearm Exercises
   {
-    id: generateUniqueId(),
     title: "Farmer's Walk",
     muscleTags: ["Forearms", "Traps"],
     lastUsed: "20/10/24",
@@ -524,7 +473,6 @@ export const defaultExercises = [
 
   // Additional Oblique Exercises
   {
-    id: generateUniqueId(),
     title: "Woodchoppers",
     muscleTags: ["Obliques", "Abs", "Shoulders"],
     lastUsed: "20/10/24",

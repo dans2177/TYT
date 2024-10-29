@@ -1,6 +1,6 @@
 // src/components/screens/ExerciseScreen.jsx
 
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useMemo } from "react";
 import {
   View,
   Text,
@@ -15,6 +15,7 @@ import {
   ActivityIndicator,
   Keyboard,
   TouchableWithoutFeedback,
+  ScrollView,
 } from "react-native";
 import { useNavigation } from "@react-navigation/native";
 import { LinearGradient } from "expo-linear-gradient";
@@ -26,7 +27,7 @@ import {
   deleteExerciseFromFirestore,
 } from "../../redux/slices/exerciseSlice";
 import { Ionicons } from "@expo/vector-icons";
-import { defaultExercises } from "../utils/WorkoutDefaults"; // Ensure this import is correct
+import { defaultExercises } from "../utils/ExerciseDefaults"; // Ensure this import is correct
 
 const { width, height } = Dimensions.get("window");
 
@@ -75,28 +76,56 @@ const ExerciseScreen = () => {
   const errorMessage = useSelector((state) => state.exercises.error);
 
   const [modalVisible, setModalVisible] = useState(false);
-  const [selectedExercise, setSelectedExercise] = useState(null);
   const [isEditing, setIsEditing] = useState(false);
   const [selectedMuscleTags, setSelectedMuscleTags] = useState([]);
   const [localErrorMessage, setLocalErrorMessage] = useState("");
   const [weightDisplayOption, setWeightDisplayOption] = useState("max"); // 'max' or 'last'
+
+  // Search State Variable
+  const [searchQuery, setSearchQuery] = useState("");
+
+  // Form State Variables
+  const [formTitle, setFormTitle] = useState("");
+  const [formMax, setFormMax] = useState("");
+  const [formNotes, setFormNotes] = useState("");
+  const [currentExerciseId, setCurrentExerciseId] = useState(null);
 
   useEffect(() => {
     dispatch(loadExercises());
   }, [dispatch]);
 
   const openModal = (exercise = null) => {
-    setSelectedExercise(exercise || {});
-    setModalVisible(true);
-    setIsEditing(!!exercise);
-    setSelectedMuscleTags(exercise?.muscleTags || []);
+    if (exercise) {
+      setIsEditing(true);
+      setFormTitle(exercise.title || "");
+      setFormMax(
+        exercise.max !== undefined && exercise.max !== null
+          ? exercise.max.toString()
+          : ""
+      );
+      setSelectedMuscleTags(exercise.muscleTags || []);
+      setFormNotes(exercise.notes || "");
+      setCurrentExerciseId(exercise.id);
+    } else {
+      setIsEditing(false);
+      setFormTitle("");
+      setFormMax("");
+      setSelectedMuscleTags([]);
+      setFormNotes("");
+      setCurrentExerciseId(null);
+    }
     setLocalErrorMessage("");
+    setModalVisible(true);
   };
 
   const closeModal = () => {
     setModalVisible(false);
-    setSelectedExercise(null);
+    setFormTitle("");
+    setFormMax("");
     setSelectedMuscleTags([]);
+    setFormNotes("");
+    setCurrentExerciseId(null);
+    setLocalErrorMessage("");
   };
 
   const getCurrentDate = () => {
@@ -107,20 +136,28 @@ const ExerciseScreen = () => {
     return `${day}/${month}/${year}`;
   };
 
-  const handleSaveExercise = (exercise) => {
-    if (!exercise.title || selectedMuscleTags.length === 0) {
+  const handleSaveExercise = () => {
+    if (!formTitle.trim() || selectedMuscleTags.length === 0) {
       setLocalErrorMessage("Title and Muscle Tags are required.");
       return;
     }
 
     const updatedExercise = {
-      ...exercise,
+      title: formTitle.trim(),
+      max: formMax ? parseInt(formMax) : 0,
+      lastWeight: formMax ? parseInt(formMax) : 0,
       lastUsed: getCurrentDate(),
       muscleTags: selectedMuscleTags,
+      notes: formNotes.trim(),
     };
 
-    if (isEditing) {
-      dispatch(updateExerciseInFirestore(updatedExercise));
+    if (isEditing && currentExerciseId) {
+      dispatch(
+        updateExerciseInFirestore({
+          id: currentExerciseId,
+          ...updatedExercise,
+        })
+      );
     } else {
       dispatch(addExerciseToFirestore(updatedExercise));
     }
@@ -151,48 +188,64 @@ const ExerciseScreen = () => {
   };
 
   // Data migration for existing exercises
-  const transformedExercises = exercisesFromState.map((exercise) => {
-    if (!Array.isArray(exercise.muscleTags)) {
-      if (exercise.muscleGroup) {
-        // Convert muscleGroup to muscleTags
-        exercise.muscleTags = [exercise.muscleGroup];
-        delete exercise.muscleGroup; // Optionally remove muscleGroup property
-      } else {
-        // Initialize muscleTags as an empty array
-        exercise.muscleTags = [];
+  const transformedExercises = useMemo(() => {
+    return exercisesFromState.map((exercise) => {
+      if (!Array.isArray(exercise.muscleTags)) {
+        if (exercise.muscleGroup) {
+          // Convert muscleGroup to muscleTags
+          exercise.muscleTags = [exercise.muscleGroup];
+          delete exercise.muscleGroup; // Optionally remove muscleGroup property
+        } else {
+          // Initialize muscleTags as an empty array
+          exercise.muscleTags = [];
+        }
       }
+      return exercise;
+    });
+  }, [exercisesFromState]);
+
+  // Filtered Exercises based on search query
+  const filteredExercises = useMemo(() => {
+    if (searchQuery.trim() === "") {
+      return transformedExercises;
     }
-    return exercise;
-  });
+    return transformedExercises.filter((exercise) =>
+      exercise.title.toLowerCase().includes(searchQuery.toLowerCase())
+    );
+  }, [searchQuery, transformedExercises]);
 
   // Group exercises under broader categories
-  const groupedExercises = {};
+  const groupedExercises = useMemo(() => {
+    const groups = {};
 
-  transformedExercises.forEach((exercise) => {
-    const muscleTags = exercise.muscleTags || [];
+    filteredExercises.forEach((exercise) => {
+      const muscleTags = exercise.muscleTags || [];
 
-    const categories = new Set();
+      const categories = new Set();
 
-    muscleTags.forEach((tag) => {
-      const category = muscleGroupCategories[tag] || tag; // Default to tag if no mapping
-      categories.add(category);
+      muscleTags.forEach((tag) => {
+        const category = muscleGroupCategories[tag] || tag; // Default to tag if no mapping
+        categories.add(category);
+      });
+
+      let groupKey = "";
+
+      if (categories.size === 1) {
+        groupKey = Array.from(categories)[0];
+      } else if (categories.size > 1) {
+        groupKey = "Compound Exercises";
+      } else {
+        groupKey = "Other";
+      }
+
+      if (!groups[groupKey]) {
+        groups[groupKey] = [];
+      }
+      groups[groupKey].push(exercise);
     });
 
-    let groupKey = "";
-
-    if (categories.size === 1) {
-      groupKey = Array.from(categories)[0];
-    } else if (categories.size > 1) {
-      groupKey = "Compound Exercises";
-    } else {
-      groupKey = "Other";
-    }
-
-    if (!groupedExercises[groupKey]) {
-      groupedExercises[groupKey] = [];
-    }
-    groupedExercises[groupKey].push(exercise);
-  });
+    return groups;
+  }, [filteredExercises]);
 
   const handleAddDefaultExercises = () => {
     if (!Array.isArray(defaultExercises)) {
@@ -211,35 +264,138 @@ const ExerciseScreen = () => {
     );
   };
 
+  // Handle closing the modal with automatic save
+  const handleModalClose = () => {
+    // Attempt to save
+    if (!formTitle.trim() || selectedMuscleTags.length === 0) {
+      setLocalErrorMessage("Title and Muscle Tags are required.");
+      return;
+    }
+
+    const updatedExercise = {
+      title: formTitle.trim(),
+      max: formMax ? parseInt(formMax) : 0,
+      lastWeight: formMax ? parseInt(formMax) : 0,
+      lastUsed: getCurrentDate(),
+      muscleTags: selectedMuscleTags,
+      notes: formNotes.trim(),
+    };
+
+    if (isEditing && currentExerciseId) {
+      dispatch(
+        updateExerciseInFirestore({
+          id: currentExerciseId,
+          ...updatedExercise,
+        })
+      );
+    } else {
+      dispatch(addExerciseToFirestore(updatedExercise));
+    }
+
+    closeModal();
+  };
+
   return (
-    <View style={{ flex: 1 }}>
+    <View className="flex-1 bg-black">
+      {/* LinearGradient Background */}
       <LinearGradient
         colors={["#18181b", "#0d0d0d", "#0d0d0d", "#1a1a1a", "#00FF00"]}
         start={{ x: 0.5, y: 0 }}
         end={{ x: 0.5, y: 1 }}
-        style={{ position: "absolute", width: width, height: height }}
+        className="absolute top-0 left-0 w-full h-full"
       />
 
-      <View style={{ paddingTop: 60, width: "100%", flexDirection: "row", justifyContent: "space-between", alignItems: "center", paddingHorizontal: 16 }}>
+      {/* Header */}
+      <View className="pt-16 w-full flex-row justify-between items-center px-4">
         {/* Home Button with Emoji on the Left */}
-        <TouchableOpacity onPress={() => navigation.navigate("Home")}>
-          <Text style={{ color: "#ffffff", fontSize: 32 }}>🏠</Text>
+        <TouchableOpacity
+          onPress={() => navigation.navigate("Home")}
+          accessibilityLabel="Home Button"
+          accessibilityHint="Navigates to the Home screen"
+        >
+          <Text className="text-white text-4xl">🏠</Text>
         </TouchableOpacity>
 
         {/* Centered Exercises Text */}
-        <Text style={{ color: "#ffffff", fontSize: 24, fontFamily: "Silkscreen", textAlign: "center" }}>Exercises</Text>
+        <Text className="text-white text-xl font-bold text-center">
+          Exercises
+        </Text>
 
         {/* Add Button with Emoji on the Right */}
-        <TouchableOpacity onPress={() => openModal()}>
-          <Text style={{ color: "#ffffff", fontSize: 32 }}>➕</Text>
+        <TouchableOpacity
+          onPress={() => openModal()}
+          accessibilityLabel="Add Exercise Button"
+          accessibilityHint="Opens the modal to add a new exercise"
+        >
+          <Text className="text-white text-4xl">➕</Text>
         </TouchableOpacity>
       </View>
 
+      {/* Search Bar */}
+      <View className="px-4 mt-4">
+        <View className="flex-row items-center bg-gray-700 rounded-lg px-3 py-2">
+          <Ionicons name="search" size={20} color="#a1a1aa" className="mr-2" />
+          <TextInput
+            value={searchQuery}
+            onChangeText={setSearchQuery}
+            className="flex-1 text-white"
+            placeholder="Search exercises..."
+            placeholderTextColor="#a1a1aa"
+            accessible={true}
+            accessibilityLabel="Search Exercises"
+            accessibilityHint="Type to search for exercises"
+          />
+          {searchQuery !== "" && (
+            <TouchableOpacity onPress={() => setSearchQuery("")}>
+              <Ionicons name="close-circle" size={20} color="#a1a1aa" />
+            </TouchableOpacity>
+          )}
+        </View>
+      </View>
+
+      {/* Toggle for Max Weight and Last Weight */}
+      {status !== "loading" && (
+        <View className="flex-row justify-center items-center mt-4 pb-2">
+          <TouchableOpacity
+            onPress={() => setWeightDisplayOption("max")}
+            className={`px-4 py-2 mx-1 rounded-full ${
+              weightDisplayOption === "max" ? "bg-orange-500" : "bg-gray-200"
+            }`}
+            accessibilityLabel="Max Weight Toggle"
+            accessibilityHint="Displays the maximum weight for each exercise"
+          >
+            <Text
+              className={`font-bold ${
+                weightDisplayOption === "max" ? "text-white" : "text-black"
+              }`}
+            >
+              Max Weight
+            </Text>
+          </TouchableOpacity>
+          <TouchableOpacity
+            onPress={() => setWeightDisplayOption("last")}
+            className={`px-4 py-2 mx-1 rounded-full ${
+              weightDisplayOption === "last" ? "bg-orange-500" : "bg-gray-200"
+            }`}
+            accessibilityLabel="Last Weight Toggle"
+            accessibilityHint="Displays the last used weight for each exercise"
+          >
+            <Text
+              className={`font-bold ${
+                weightDisplayOption === "last" ? "text-white" : "text-black"
+              }`}
+            >
+              Last Weight
+            </Text>
+          </TouchableOpacity>
+        </View>
+      )}
+
       {/* Loading Indicator */}
       {status === "loading" && exercisesFromState.length === 0 && (
-        <View style={{ flex: 1, justifyContent: "center", alignItems: "center" }}>
+        <View className="flex-1 justify-center items-center">
           <ActivityIndicator size="large" color="#00FF00" />
-          <Text style={{ color: "#ffffff", fontSize: 18, marginTop: 10, fontWeight: "bold" }}>
+          <Text className="text-white text-lg mt-2 font-bold">
             Loading exercises...
           </Text>
         </View>
@@ -247,295 +403,181 @@ const ExerciseScreen = () => {
 
       {/* Error Message */}
       {status === "failed" && (
-        <Text style={{ color: "red", textAlign: "center", margin: 16 }}>
+        <Text className="text-red-500 text-center m-4 text-md">
           Error loading exercises: {errorMessage}
         </Text>
       )}
 
-      {/* Toggle for Max Weight and Last Weight */}
+      {/* Exercises List */}
       {status !== "loading" && (
-        <>
-          <View style={{ flexDirection: "row", justifyContent: "center", alignItems: "center", marginTop: 16 }}>
-            <TouchableOpacity
-              onPress={() => setWeightDisplayOption("max")}
-              style={{
-                paddingHorizontal: 16,
-                paddingVertical: 8,
-                marginHorizontal: 4,
-                borderRadius: 9999,
-                backgroundColor: weightDisplayOption === "max" ? "#F97316" : "#E5E7EB",
-              }}
-            >
-              <Text
-                style={{
-                  fontWeight: "bold",
-                  color: weightDisplayOption === "max" ? "#FFFFFF" : "#000000",
-                }}
-              >
-                Max Weight
+        <FlatList
+          data={Object.entries(groupedExercises)}
+          keyExtractor={([group]) => group}
+          className="p-4 py-2"
+          renderItem={({ item: [group, exercises] }) => (
+            <View key={group} className="mb-4">
+              <Text className="text-white text-lg mb-2 font-bold ">
+                {group}
               </Text>
-            </TouchableOpacity>
-            <TouchableOpacity
-              onPress={() => setWeightDisplayOption("last")}
-              style={{
-                paddingHorizontal: 16,
-                paddingVertical: 8,
-                marginHorizontal: 4,
-                borderRadius: 9999,
-                backgroundColor: weightDisplayOption === "last" ? "#F97316" : "#E5E7EB",
-              }}
-            >
-              <Text
-                style={{
-                  fontWeight: "bold",
-                  color: weightDisplayOption === "last" ? "#FFFFFF" : "#000000",
-                }}
-              >
-                Last Weight
+              {exercises.map((exercise) => {
+                const displayWeight =
+                  weightDisplayOption === "max"
+                    ? exercise.max
+                    : exercise.lastWeight !== undefined
+                    ? exercise.lastWeight
+                    : "N/A";
+
+                return (
+                  <TouchableOpacity
+                    key={exercise.id}
+                    onPress={() => openModal(exercise)}
+                    onLongPress={() => confirmDelete(exercise)}
+                    className="mb-3"
+                    accessibilityLabel={`Exercise ${exercise.title}`}
+                    accessibilityHint="Tap to edit or long press to delete"
+                  >
+                    <View className="flex-row justify-between items-center bg-gray-700 rounded-lg p-4">
+                      <Text className="text-white text-md font-semibold">
+                        {exercise.title}
+                      </Text>
+                      <Text className="text-orange-500 text-lg font-bold">
+                        {displayWeight} lbs
+                      </Text>
+                    </View>
+                  </TouchableOpacity>
+                );
+              })}
+            </View>
+          )}
+          ListEmptyComponent={
+            <View className="items-center mt-5">
+              <Text className="text-white text-md text-center mb-3">
+                No exercises found. Would you like to add default exercises?
               </Text>
-            </TouchableOpacity>
-          </View>
-
-          {/* Exercises List */}
-          <FlatList
-            data={Object.entries(groupedExercises)}
-            keyExtractor={([group]) => group}
-            contentContainerStyle={{
-              paddingHorizontal: 16,
-              paddingVertical: 8,
-            }}
-            renderItem={({ item: [group, exercises] }) => (
-              <View key={group} style={{ marginBottom: 16 }}>
-                <Text style={{ color: "#ffffff", fontSize: 20, marginBottom: 8, fontFamily: "Silkscreen" }}>
-                  {group}
+              <TouchableOpacity
+                onPress={handleAddDefaultExercises}
+                className="flex-row items-center bg-green-600 px-4 py-2 rounded-lg"
+                accessibilityLabel="Add Default Exercises Button"
+                accessibilityHint="Adds default exercises to your list"
+              >
+                <Ionicons name="add-circle-outline" size={24} color="white" />
+                <Text className="text-white text-md font-bold ml-2">
+                  Add Default Exercises
                 </Text>
-                {exercises.map((exercise) => {
-                  const displayWeight =
-                    weightDisplayOption === "max"
-                      ? exercise.max
-                      : exercise.lastWeight !== undefined
-                      ? exercise.lastWeight
-                      : "N/A";
-
-                  return (
-                    <TouchableOpacity
-                      key={exercise.id}
-                      onPress={() => openModal(exercise)}
-                      onLongPress={() => confirmDelete(exercise)}
-                    >
-                      <View style={{ marginBottom: 12, padding: 16, backgroundColor: "#2D3748", borderRadius: 12, flexDirection: "row", justifyContent: "space-between", alignItems: "center" }}>
-                        <View style={{ flex: 1 }}>
-                          <Text style={{ color: "#ffffff", fontSize: 18, fontFamily: "Silkscreen" }}>
-                            {exercise.title}
-                          </Text>
-                        </View>
-                        <Text style={{ color: "#F97316", fontSize: 20, fontWeight: "bold" }}>
-                          {displayWeight} lbs
-                        </Text>
-                      </View>
-                    </TouchableOpacity>
-                  );
-                })}
-              </View>
-            )}
-            ListEmptyComponent={
-              <View style={{ alignItems: "center", marginTop: 20 }}>
-                <Text style={{ color: "#ffffff", fontSize: 18, marginBottom: 12, fontFamily: "Silkscreen" }}>
-                  No exercises found. Would you like to add default exercises?
-                </Text>
-                <TouchableOpacity
-                  onPress={handleAddDefaultExercises}
-                  style={{
-                    flexDirection: "row",
-                    alignItems: "center",
-                    backgroundColor: "#38A169",
-                    padding: 12,
-                    borderRadius: 8,
-                  }}
-                >
-                  <Ionicons name="add-circle-outline" size={24} color="white" />
-                  <Text style={{ color: "#ffffff", fontSize: 16, marginLeft: 8, fontWeight: "bold" }}>
-                    Add Default Exercises
-                  </Text>
-                </TouchableOpacity>
-              </View>
-            }
-          />
-        </>
+              </TouchableOpacity>
+            </View>
+          }
+        />
       )}
 
       {/* Add/Edit Exercise Modal */}
-      <Modal visible={modalVisible} transparent={true} animationType="fade">
-        <TouchableWithoutFeedback onPress={Keyboard.dismiss} accessible={false}>
-          <View style={{ flex: 1, backgroundColor: "rgba(0, 0, 0, 0.8)", justifyContent: "center", alignItems: "center" }}>
-            <KeyboardAvoidingView
-              behavior={Platform.OS === "ios" ? "padding" : "height"}
-              style={{
-                flex: 1,
-                justifyContent: "center",
-                alignItems: "center",
-                width: "100%",
-              }}
-              keyboardVerticalOffset={Platform.OS === "ios" ? 100 : 0}
-            >
-              <View style={{ width: "90%", padding: 24, backgroundColor: "#2D3748", borderRadius: 12 }}>
-                <Text style={{ color: "#ffffff", fontSize: 22, marginBottom: 16, fontFamily: "Silkscreen" }}>
-                  {isEditing ? "Edit Exercise" : "Add Exercise"}
-                </Text>
+      <Modal visible={modalVisible} transparent animationType="fade">
+        <TouchableWithoutFeedback onPress={handleModalClose}>
+          <View className="flex-1 justify-center items-center bg-black bg-opacity-50">
+            <TouchableWithoutFeedback onPress={() => {}}>
+              <KeyboardAvoidingView
+                behavior={Platform.OS === "ios" ? "padding" : "height"}
+                className="w-11/12"
+              >
+                <ScrollView contentContainerStyle="flex-grow justify-center items-center">
+                  <View className="w-full bg-gray-800 rounded-lg p-6">
+                    <Text className="text-white text-xl mb-4 font-bold text-center">
+                      {isEditing ? "Edit Exercise" : "Add Exercise"}
+                    </Text>
 
-                {/* Exercise Title Input */}
-                <TextInput
-                  placeholder="Exercise Title"
-                  value={selectedExercise?.title || ""}
-                  onChangeText={(text) =>
-                    setSelectedExercise((prev) => ({
-                      ...prev,
-                      title: text,
-                    }))
-                  }
-                  style={{
-                    backgroundColor: "#4A5568",
-                    color: "#ffffff",
-                    borderRadius: 8,
-                    padding: 12,
-                    marginBottom: 12,
-                    fontSize: 16,
-                  }}
-                  placeholderTextColor="#cbd5e0"
-                />
+                    {/* Exercise Title Label and Input */}
+                    <Text className="text-white text-sm mb-1">
+                      Exercise Title
+                    </Text>
+                    <TextInput
+                      value={formTitle}
+                      onChangeText={setFormTitle}
+                      className="bg-gray-600 text-white rounded-md px-3 py-2 mb-4"
+                      placeholder="Enter exercise title"
+                      placeholderTextColor="#a1a1aa"
+                      accessible={true}
+                      accessibilityLabel="Exercise Title Input"
+                      accessibilityHint="Enter the title of the exercise"
+                    />
 
-                {/* Muscle Tags Selector */}
-                <View style={{ flexWrap: "wrap", flexDirection: "row", justifyContent: "center", padding: 8 }}>
-                  {muscleGroups.map((group) => (
-                    <TouchableOpacity
-                      key={group}
-                      onPress={() => toggleMuscleTagSelection(group)}
-                      style={{
-                        paddingHorizontal: 12,
-                        paddingVertical: 6,
-                        margin: 4,
-                        borderRadius: 9999,
-                        backgroundColor: selectedMuscleTags.includes(group) ? "#F97316" : "#E5E7EB",
+                    {/* Muscle Tags Label and Selector */}
+                    <Text className="text-white text-sm mb-1">Muscle Tags</Text>
+                    <View className="flex-row flex-wrap mb-4 justify-center">
+                      {muscleGroups.map((group) => (
+                        <TouchableOpacity
+                          key={group}
+                          onPress={() => toggleMuscleTagSelection(group)}
+                          className={`px-3 py-1 mr-2 mb-2 rounded-full border ${
+                            selectedMuscleTags.includes(group)
+                              ? "bg-orange-500 border-orange-500"
+                              : "bg-gray-200 border-gray-200"
+                          }`}
+                          accessibilityLabel={`Muscle Tag ${group}`}
+                          accessibilityHint={`${
+                            selectedMuscleTags.includes(group)
+                              ? "Deselect"
+                              : "Select"
+                          } ${group} muscle group`}
+                        >
+                          <Text
+                            className={`font-semibold ${
+                              selectedMuscleTags.includes(group)
+                                ? "text-white"
+                                : "text-black"
+                            }`}
+                          >
+                            {group}
+                          </Text>
+                        </TouchableOpacity>
+                      ))}
+                    </View>
+
+                    {/* Max Weight Label and Input */}
+                    <Text className="text-white text-sm mb-1">
+                      Max Weight (lbs)
+                    </Text>
+                    <TextInput
+                      keyboardType="numeric"
+                      value={formMax}
+                      onChangeText={setFormMax}
+                      onFocus={() => {
+                        if (formMax === "0") {
+                          setFormMax("");
+                        }
                       }}
-                    >
-                      <Text
-                        style={{
-                          fontWeight: "bold",
-                          color: selectedMuscleTags.includes(group) ? "#FFFFFF" : "#000000",
-                        }}
-                      >
-                        {group}
+                      className="bg-gray-600 text-white rounded-md px-3 py-2 mb-4"
+                      placeholder="Enter max weight"
+                      placeholderTextColor="#a1a1aa"
+                      accessible={true}
+                      accessibilityLabel="Max Weight Input"
+                      accessibilityHint="Enter the maximum weight for the exercise"
+                    />
+
+                    {/* Notes Label and Input */}
+                    <Text className="text-white text-sm mb-1">Notes</Text>
+                    <TextInput
+                      value={formNotes}
+                      onChangeText={setFormNotes}
+                      className="bg-gray-600 text-white rounded-md px-3 py-2 mb-4 h-24 text-top"
+                      placeholder="Enter notes"
+                      placeholderTextColor="#a1a1aa"
+                      multiline
+                      numberOfLines={4}
+                      accessible={true}
+                      accessibilityLabel="Notes Input"
+                      accessibilityHint="Enter any additional notes for the exercise"
+                    />
+
+                    {/* Error Message */}
+                    {localErrorMessage ? (
+                      <Text className="text-red-500 text-center mb-4">
+                        {localErrorMessage}
                       </Text>
-                    </TouchableOpacity>
-                  ))}
-                </View>
-
-                {/* Max Weight Input */}
-                <TextInput
-                  placeholder="Max Weight (lbs)"
-                  keyboardType="numeric"
-                  value={
-                    selectedExercise?.max !== undefined
-                      ? selectedExercise.max.toString()
-                      : ""
-                  }
-                  onChangeText={(text) =>
-                    setSelectedExercise((prev) => ({
-                      ...prev,
-                      max: parseInt(text) || 0,
-                    }))
-                  }
-                  style={{
-                    backgroundColor: "#4A5568",
-                    color: "#ffffff",
-                    borderRadius: 8,
-                    padding: 12,
-                    marginBottom: 12,
-                    fontSize: 16,
-                  }}
-                  placeholderTextColor="#cbd5e0"
-                />
-
-                {/* Notes Input */}
-                <TextInput
-                  placeholder="Notes"
-                  value={selectedExercise?.notes || ""}
-                  onChangeText={(text) =>
-                    setSelectedExercise((prev) => ({
-                      ...prev,
-                      notes: text,
-                    }))
-                  }
-                  style={{
-                    backgroundColor: "#4A5568",
-                    color: "#ffffff",
-                    borderRadius: 8,
-                    padding: 12,
-                    marginBottom: 12,
-                    fontSize: 16,
-                    height: 80,
-                    textAlignVertical: "top",
-                  }}
-                  placeholderTextColor="#cbd5e0"
-                  multiline
-                />
-
-                {/* Error Message */}
-                {localErrorMessage ? (
-                  <Text style={{ color: "red", marginBottom: 12, textAlign: "center" }}>
-                    {localErrorMessage}
-                  </Text>
-                ) : null}
-
-                {/* Save and Cancel Buttons */}
-                <View style={{ flexDirection: "row", justifyContent: "space-between", marginTop: 8 }}>
-                  <TouchableOpacity
-                    onPress={() => handleSaveExercise(selectedExercise)}
-                    style={{
-                      flex: 1,
-                      flexDirection: "row",
-                      justifyContent: "center",
-                      alignItems: "center",
-                      backgroundColor: "#38A169",
-                      padding: 12,
-                      borderRadius: 8,
-                      marginRight: 8,
-                    }}
-                  >
-                    <Ionicons
-                      name="checkmark-circle-outline"
-                      size={24}
-                      color="white"
-                    />
-                    <Text style={{ color: "#ffffff", fontSize: 16, marginLeft: 8, fontWeight: "bold" }}>
-                      {isEditing ? "Save Changes" : "Add Exercise"}
-                    </Text>
-                  </TouchableOpacity>
-                  <TouchableOpacity
-                    onPress={closeModal}
-                    style={{
-                      flex: 1,
-                      flexDirection: "row",
-                      justifyContent: "center",
-                      alignItems: "center",
-                      backgroundColor: "#E53E3E",
-                      padding: 12,
-                      borderRadius: 8,
-                      marginLeft: 8,
-                    }}
-                  >
-                    <Ionicons
-                      name="close-circle-outline"
-                      size={24}
-                      color="white"
-                    />
-                    <Text style={{ color: "#ffffff", fontSize: 16, marginLeft: 8, fontWeight: "bold" }}>
-                      Cancel
-                    </Text>
-                  </TouchableOpacity>
-                </View>
-              </View>
-            </KeyboardAvoidingView>
+                    ) : null}
+                  </View>
+                </ScrollView>
+              </KeyboardAvoidingView>
+            </TouchableWithoutFeedback>
           </View>
         </TouchableWithoutFeedback>
       </Modal>
@@ -543,4 +585,5 @@ const ExerciseScreen = () => {
   );
 };
 
+// Since we're using NativeWind, we don't need StyleSheet.create
 export default ExerciseScreen;
