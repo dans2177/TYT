@@ -1,25 +1,17 @@
 // src/screens/WorkoutScreen.js
 
 import React, { useEffect } from "react";
-import {
-  View,
-  Text,
-  TouchableOpacity,
-  ScrollView,
-  SafeAreaView,
-} from "react-native";
+import { View, Text, TouchableOpacity, SafeAreaView } from "react-native";
 import { useSelector, useDispatch } from "react-redux";
 import { loadMuscleTags } from "../../redux/slices/muscleTagsSlice";
 import { loadWorkout, startWorkout } from "../../redux/slices/workoutSlice";
-import StartSection from "../utils/StartSection";
-
 import { Ionicons } from "@expo/vector-icons";
 import ExerciseTracking from "../utils/ExerciseTracking";
 
 const WorkoutScreen = () => {
   const dispatch = useDispatch();
 
-  // Use effect to load muscle tags and workout data
+  // Load muscle tags and workout data on component mount
   useEffect(() => {
     dispatch(loadMuscleTags());
     dispatch(loadWorkout());
@@ -29,7 +21,7 @@ const WorkoutScreen = () => {
   const workoutDay = useSelector((state) => state.user.profile.workoutDay);
   const workoutData = useSelector((state) => state.workout.data);
 
-  // Console log muscle tags and workout days
+  // Console log muscle tags and workout days for debugging
   console.log("muscleTags", muscleTags);
   console.log("workoutDay", workoutDay);
   console.log("workoutData", workoutData);
@@ -39,10 +31,11 @@ const WorkoutScreen = () => {
     dispatch(startWorkout());
   };
 
+  // Render when workout hasn't started
   if (!workoutData || !workoutData.isStarted) {
     return (
-      <SafeAreaView className="flex-1">
-        <View className="mt-44 justify-center items-center">
+      <SafeAreaView className="flex-1 ">
+        <View className="flex-1 justify-center items-center mt-44">
           {/* Play Button */}
           <TouchableOpacity
             className="bg-lime-500 h-60 w-60 rounded-full justify-center items-center"
@@ -81,11 +74,11 @@ const WorkoutScreen = () => {
     );
   }
 
+  // Render when workout has started
   return (
-    <View className="flex-1">
-      <StartSection />
-      <ExerciseTracking  />
-    </View>
+    <SafeAreaView className="flex-1 ">
+      <ExerciseTracking />
+    </SafeAreaView>
   );
 };
 

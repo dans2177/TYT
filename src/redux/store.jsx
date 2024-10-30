@@ -6,6 +6,7 @@ import userReducer from "./slices/userSlice";
 import muscleTagReducer from "./slices/muscleTagsSlice";
 import exerciseReducer from "./slices/exerciseSlice";
 import workoutReducer from "./slices/workoutSlice";
+import exerciseTrackingReducer from "./slices/exerciseTrackingSlice"; // Import the new reducer here
 
 export const store = configureStore({
   reducer: {
@@ -13,7 +14,8 @@ export const store = configureStore({
     user: userReducer,
     muscleTags: muscleTagReducer,
     exercises: exerciseReducer,
-    workout: workoutReducer
+    workout: workoutReducer,
+    exerciseTracking: exerciseTrackingReducer, // Add the new reducer here
 
   },
   middleware: (getDefaultMiddleware) =>
