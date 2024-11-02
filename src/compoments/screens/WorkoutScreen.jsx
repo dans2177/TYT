@@ -35,13 +35,13 @@ const WorkoutScreen = () => {
   if (!workoutData || !workoutData.isStarted) {
     return (
       <SafeAreaView className="flex-1 ">
-        <View className="flex-1 justify-center items-center mt-44">
+        <View className=" justify-center items-center mt-44">
           {/* Play Button */}
           <TouchableOpacity
-            className="bg-lime-500 h-60 w-60 rounded-full justify-center items-center"
+            className="bg-lime-500 pl-4 h-60 w-60 rounded-full justify-center items-center"
             onPress={handleStartWorkout}
           >
-            <Ionicons name="play" size={150} color="white" />
+            <Ionicons name="play" size={150} color="gray" />
           </TouchableOpacity>
         </View>
 

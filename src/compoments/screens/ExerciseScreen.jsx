@@ -480,6 +480,14 @@ const ExerciseScreen = () => {
                 className="w-11/12"
               >
                 <ScrollView contentContainerStyle="flex-grow justify-center items-center">
+                  <TouchableOpacity
+                    onPress={closeModal}
+                    className="absolute z-50 top-4 right-4"
+                    accessibilityLabel="Close Modal Button"
+                    accessibilityHint="Closes the modal"
+                  >
+                    <Ionicons name="close-circle" size={32} color="white" />
+                  </TouchableOpacity>
                   <View className="w-full bg-gray-800 rounded-lg p-6">
                     <Text className="text-white text-xl mb-4 font-bold text-center">
                       {isEditing ? "Edit Exercise" : "Add Exercise"}
@@ -574,6 +582,19 @@ const ExerciseScreen = () => {
                         {localErrorMessage}
                       </Text>
                     ) : null}
+
+                    {/* Save Button */}
+                    <TouchableOpacity
+                      onPress={handleSaveExercise}
+                      className="bg-green-600 px-4 py-2 rounded-lg justify-center items-center"
+                      accessibilityLabel="Save Exercise Button"
+                      accessibilityHint="Saves the exercise to your list"
+                    >
+                      <Text className="text-white text-lg font-bold">
+                        Save Exercise
+                      </Text>
+                    </TouchableOpacity>
+                    
                   </View>
                 </ScrollView>
               </KeyboardAvoidingView>

@@ -22,7 +22,6 @@ const StartSection = () => {
   const [isCardioChecked, setIsCardioChecked] = useState(
     workoutData?.cardio || false
   );
-  const [lastCompleted, setLastCompleted] = useState(null);
   const [selectedMinutes, setSelectedMinutes] = useState(
     workoutData?.cardioLength || 10
   );
@@ -31,6 +30,7 @@ const StartSection = () => {
   );
   const [minutesModalVisible, setMinutesModalVisible] = useState(false);
   const [exerciseModalVisible, setExerciseModalVisible] = useState(false);
+  const [showBanner, setShowBanner] = useState(false);
 
   useEffect(() => {
     // Update local state when workoutData changes
@@ -38,6 +38,11 @@ const StartSection = () => {
     setIsCardioChecked(workoutData?.cardio || false);
     setSelectedMinutes(workoutData?.cardioLength || 10);
     setSelectedExercise(workoutData?.cardioType || "treadmill");
+
+    // Show banner if both Stretch and Cardio are checked
+    if (workoutData?.stretch && workoutData?.cardio) {
+      setShowBanner(true);
+    }
   }, [workoutData]);
 
   const motivationalQuotes = [
@@ -51,31 +56,41 @@ const StartSection = () => {
   const handleCheckBoxPress = () => {
     const newStretchValue = !isChecked;
     setIsChecked(newStretchValue);
-    if (newStretchValue) {
-      setLastCompleted("stretch");
-    }
-    // Update in Firebase
+
+    // Update in Firestore
     dispatch(
       updateWorkoutInFirestore({
         ...workoutData,
         stretch: newStretchValue,
       })
     );
+
+    // Show banner if both are checked
+    if (newStretchValue && isCardioChecked) {
+      setShowBanner(true);
+    } else {
+      setShowBanner(false);
+    }
   };
 
   const handleCardioCheckBoxPress = () => {
     const newCardioValue = !isCardioChecked;
     setIsCardioChecked(newCardioValue);
-    if (newCardioValue) {
-      setLastCompleted("cardio");
-    }
-    // Update in Firebase
+
+    // Update in Firestore
     dispatch(
       updateWorkoutInFirestore({
         ...workoutData,
         cardio: newCardioValue,
       })
     );
+
+    // Show banner if both are checked
+    if (isChecked && newCardioValue) {
+      setShowBanner(true);
+    } else {
+      setShowBanner(false);
+    }
   };
 
   const exercises = [
@@ -93,7 +108,7 @@ const StartSection = () => {
   const handleExerciseSelect = (exercise) => {
     setSelectedExercise(exercise.value);
     closeExerciseModal();
-    // Update in Firebase
+    // Update in Firestore
     dispatch(
       updateWorkoutInFirestore({
         ...workoutData,
@@ -105,7 +120,7 @@ const StartSection = () => {
   const handleMinutesSelect = (minute) => {
     setSelectedMinutes(minute);
     closeMinutesModal();
-    // Update in Firebase
+    // Update in Firestore
     dispatch(
       updateWorkoutInFirestore({
         ...workoutData,
@@ -114,39 +129,21 @@ const StartSection = () => {
     );
   };
 
-  const undoLastComplete = () => {
-    if (lastCompleted === "stretch") {
-      setIsChecked(false);
-      dispatch(
-        updateWorkoutInFirestore({
-          ...workoutData,
-          stretch: false,
-        })
-      );
-    } else if (lastCompleted === "cardio") {
-      setIsCardioChecked(false);
-      dispatch(
-        updateWorkoutInFirestore({
-          ...workoutData,
-          cardio: false,
-        })
-      );
-    }
-    setLastCompleted(null);
+  const closeBanner = () => {
+    setShowBanner(false);
   };
 
-  const bothComplete = isChecked && isCardioChecked;
-
   return (
-    <View className="h-40 mb-4">
-      {bothComplete ? (
+    <View className="h-40 mb-4 relative">
+      {showBanner ? (
         <View className="flex-1 h-40 bg-blue-500 mx-2 w-fit rounded-3xl justify-center items-center relative">
+          {/* Close (X) Button inside the banner */}
           <TouchableOpacity
-            className="absolute top-0 left-0 p-1 m-2 border-2 border-blue-900 rounded-full"
-            onPress={undoLastComplete}
+            className="absolute top-0 right-0 p-1 m-2 border-2 border-blue-900 rounded-full"
+            onPress={closeBanner}
             style={{ zIndex: 10 }}
           >
-            <MaterialIcons name="undo" size={18} color="black" />
+            <MaterialIcons name="close" size={18} color="black" />
           </TouchableOpacity>
           <Text className="text-white text-lg text-center px-6">
             {
@@ -160,8 +157,7 @@ const StartSection = () => {
         <View className="flex-row h-40 justify-around">
           {/* Stretch Tile */}
           <TouchableOpacity
-            className="bg-lime-500  shadow-xl
-                    shadow-zinc-800  ml-2 rounded-3xl w-[45vw] p-4"
+            className="bg-lime-500 shadow-xl shadow-zinc-800 ml-2 rounded-3xl w-[45vw] p-4"
             onPress={handleCheckBoxPress}
           >
             <View className="flex-row justify-around items-center">
@@ -188,8 +184,8 @@ const StartSection = () => {
           </TouchableOpacity>
 
           {/* Cardio Tile */}
-          <View className="bg-orange-500 mx-2 shadow-xl shadow-zinc-800 rounded-3xl w-[45vw]  flex-row justify-around items-center">
-            <View className="w-3/5 ">
+          <View className="bg-orange-500 mx-2 shadow-xl shadow-zinc-800 rounded-3xl w-[45vw] flex-row justify-around items-center">
+            <View className="w-3/5">
               <Text className="text-black text-2xl pl-4 font-bold">Cardio</Text>
               <View className="pt-4 pl-4">
                 <MaterialIcons
@@ -203,13 +199,13 @@ const StartSection = () => {
               </View>
             </View>
 
-            <View className="right-4 w-2/5 ">
+            <View className="right-4 w-2/5">
               {/* Custom Picker for exercise type */}
               <TouchableOpacity
                 className="rounded-lg"
                 onPress={openExerciseModal}
               >
-                <View className="pl-4 pt-1 ">
+                <View className="pl-4 pt-1">
                   <MaterialIcons
                     name={
                       exercises.find((ex) => ex.value === selectedExercise)
