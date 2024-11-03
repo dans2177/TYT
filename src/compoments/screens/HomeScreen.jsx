@@ -21,14 +21,14 @@ const HomeScreen = () => {
 
         {/* Workout Planner */}
         <TouchableOpacity onPress={() => navigation.navigate("Settings")}>
-          <Text className="text-3xl text-white foint- font-bold">
+          <Text className="text-4xl text-white font-handjet">
             Workout Planner
           </Text>
         </TouchableOpacity>
 
         {/* Right Icon */}
         <TouchableOpacity onPress={() => navigation.navigate("Exercises")}>
-          <Text className="text-3xl">🦾</Text>
+          <Text className="text-3xl">📋</Text>
         </TouchableOpacity>
       </View>
       <WorkoutScreen />

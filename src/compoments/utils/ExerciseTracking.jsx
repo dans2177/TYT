@@ -7,7 +7,6 @@ import {
   TouchableOpacity,
   TextInput,
   FlatList,
-  Modal,
   Alert,
   Platform,
   KeyboardAvoidingView,
@@ -24,9 +23,11 @@ import {
   loadExercises,
   addNewExercise,
 } from "../../redux/slices/exerciseSlice";
+import { updateWorkoutInFirestore } from "../../redux/slices/workoutSlice";
 import { Ionicons } from "@expo/vector-icons";
 import StartSection from "../utils/StartSection";
-import { ExerciseModals } from "../modals/ExerciseModals"; // Import the new modal component
+import { ExerciseModals } from "../modals/ExerciseModals";
+import EndWorkoutModal from "../modals/EndWorkoutModal"; // Import the new modal component
 
 const ExerciseTracking = () => {
   const dispatch = useDispatch();
@@ -35,10 +36,13 @@ const ExerciseTracking = () => {
     (state) => state.exerciseTracking.data
   );
   const exercises = useSelector((state) => state.exercises.data);
+  const workoutData = useSelector((state) => state.workout.data);
 
   const [activeExerciseIndex, setActiveExerciseIndex] = useState(null);
   const [showExerciseListModal, setShowExerciseListModal] = useState(false);
-
+  const [showEndWorkoutModal, setShowEndWorkoutModal] = useState(false);
+  const [rating, setRating] = useState(0);
+  const [notes, setNotes] = useState("");
   const [focusedInput, setFocusedInput] = useState(null);
 
   useEffect(() => {
@@ -155,6 +159,33 @@ const ExerciseTracking = () => {
     setShowExerciseListModal(false);
   };
 
+  const finishWorkout = () => {
+    dispatch(
+      updateWorkoutInFirestore({
+        ...workoutData,
+        isFinished: true,
+        isRated: true,
+        rating,
+        notes,
+      })
+    );
+    setIsFinished(true);
+    setShowEndWorkoutModal(false);
+  };
+
+  const undoFinishWorkout = () => {
+    setIsFinished(false);
+    dispatch(
+      updateWorkoutInFirestore({
+        ...workoutData,
+        isFinished: false,
+        isRated: false,
+        rating: 0,
+        notes: "",
+      })
+    );
+  };
+
   const renderHeader = () => <StartSection />;
 
   const renderItem = ({ item: exercise, index: exerciseIndex }) => {
@@ -170,7 +201,7 @@ const ExerciseTracking = () => {
         onPress={() => toggleActiveExercise(exerciseIndex)}
         onLongPress={() => handleLongPressExercise(exerciseIndex)}
         delayLongPress={500}
-        className={`rounded-3xl w-full mb-2 shadow-2xl shadow-zinc-800 ${
+        className={`rounded-3xl w-full mb-4 shadow-2xl shadow-zinc-800 ${
           isActive ? "bg-lime-500" : "bg-black"
         }`}
       >
@@ -204,21 +235,21 @@ const ExerciseTracking = () => {
           </TouchableOpacity>
         </View>
 
-        <View className="flex-wrap flex-row mt-2 justify-start pb-4 px-4">
+        <View className="flex-row flex-wrap mt-2 justify-start pb-4 px-2">
           {exercise.sets.map((set, setIndex) => (
             <TouchableOpacity
               key={setIndex}
               onLongPress={() => handleLongPressSet(exerciseIndex, setIndex)}
               delayLongPress={500}
-              className="basis-1/3 mb-1"
+              className="w-1/3 px-1 mb-2"
             >
               <View
                 className={`${
                   isActive ? "bg-lime-600" : "bg-lime-500"
-                } rounded-lg mx-1 h-20 flex-col  items-center`}
+                } rounded-lg flex-col items-center `}
               >
                 <TextInput
-                  className="text-black text-4xl text-center  rounded-lg w-20 font-inconsolata"
+                  className="text-black text-4xl text-center rounded-lg w-24 mt-1 bg-lime-500 font-handjet"
                   value={set.weight.toString()}
                   editable={isActive}
                   onFocus={() => {
@@ -235,8 +266,7 @@ const ExerciseTracking = () => {
                   maxLength={3}
                 />
                 <TextInput
-                  className="text-black text-2xl text-center font-inconsolata mb-2 rounded-md 
-                  w-10"
+                  className="text-black text-3xl text-center font-inconsolata rounded-md font-handjet w-full "
                   value={set.reps.toString()}
                   editable={isActive}
                   onFocus={() => {
@@ -259,9 +289,11 @@ const ExerciseTracking = () => {
           {isActive && (
             <TouchableOpacity
               onPress={() => addSet(exerciseIndex)}
-              className="rounded-lg bg-black h-22 basis-1/3 mb-1 items-center justify-center"
+              className="w-1/3 px-1 mb-2"
             >
-              <Text className="text-lime-500 text-4xl text-center">+</Text>
+              <View className="rounded-lg bg-black h-28 items-center justify-center">
+                <Text className="text-lime-500 text-4xl">+</Text>
+              </View>
             </TouchableOpacity>
           )}
         </View>
@@ -270,12 +302,20 @@ const ExerciseTracking = () => {
   };
 
   const renderFooter = () => (
-    <TouchableOpacity
-      onPress={() => setShowExerciseListModal(true)}
-      className="p-4 bg-blue-500 rounded-lg m-4"
-    >
-      <Text className="text-white text-center text-lg">Add Exercise</Text>
-    </TouchableOpacity>
+    <>
+      <TouchableOpacity
+        onPress={() => setShowExerciseListModal(true)}
+        className="p-4 bg-blue-500 rounded-lg m-4"
+      >
+        <Text className="text-white text-center text-lg">Add Exercise</Text>
+      </TouchableOpacity>
+      <TouchableOpacity
+        onPress={() => setShowEndWorkoutModal(true)}
+        className="p-4 bg-red-500 rounded-lg m-4"
+      >
+        <Text className="text-white text-center text-lg">End Workout</Text>
+      </TouchableOpacity>
+    </>
   );
 
   return (
@@ -287,7 +327,7 @@ const ExerciseTracking = () => {
       >
         <FlatList
           data={exerciseTrackingData}
-          keyExtractor={(item) => item.id}
+          keyExtractor={(item) => item.id.toString()}
           renderItem={renderItem}
           ListHeaderComponent={renderHeader}
           ListFooterComponent={renderFooter}
@@ -297,12 +337,21 @@ const ExerciseTracking = () => {
         />
       </KeyboardAvoidingView>
 
-      {/* Use the new ExerciseModals component */}
       <ExerciseModals
         visible={showExerciseListModal}
         onClose={() => setShowExerciseListModal(false)}
         addExercise={addExercise}
         openAddExerciseModal={() => {}}
+      />
+
+      <EndWorkoutModal
+        visible={showEndWorkoutModal}
+        onClose={() => setShowEndWorkoutModal(false)}
+        rating={rating}
+        setRating={setRating}
+        notes={notes}
+        setNotes={setNotes}
+        finishWorkout={finishWorkout}
       />
     </>
   );

@@ -1,15 +1,22 @@
 // src/screens/WorkoutScreen.js
 
-import React, { useEffect } from "react";
+import React, { useEffect, useState } from "react";
 import { View, Text, TouchableOpacity, SafeAreaView } from "react-native";
 import { useSelector, useDispatch } from "react-redux";
 import { loadMuscleTags } from "../../redux/slices/muscleTagsSlice";
-import { loadWorkout, startWorkout } from "../../redux/slices/workoutSlice";
+import {
+  loadWorkout,
+  startWorkout,
+  updateWorkoutInFirestore,
+} from "../../redux/slices/workoutSlice";
 import { Ionicons } from "@expo/vector-icons";
 import ExerciseTracking from "../utils/ExerciseTracking";
 
 const WorkoutScreen = () => {
   const dispatch = useDispatch();
+  const [isFinished, setIsFinished] = useState(false);
+  const [rating, setRating] = useState(0);
+  const [notes, setNotes] = useState("");
 
   // Load muscle tags and workout data on component mount
   useEffect(() => {
@@ -31,11 +38,37 @@ const WorkoutScreen = () => {
     dispatch(startWorkout());
   };
 
-  // Render when workout hasn't started
+  const finishWorkout = () => {
+    dispatch(
+      updateWorkoutInFirestore({
+        ...workoutData,
+        isFinished: true,
+        isRated: true,
+        rating,
+        notes,
+      })
+    );
+    setIsFinished(true);
+  };
+
+  const undoFinishWorkout = () => {
+    setIsFinished(false);
+    dispatch(
+      updateWorkoutInFirestore({
+        ...workoutData,
+        isFinished: false,
+        isRated: false,
+        rating: 0,
+        notes: "",
+      })
+    );
+  };
+
+  // Render when workout hasn't started or is finished
   if (!workoutData || !workoutData.isStarted) {
     return (
-      <SafeAreaView className="flex-1 ">
-        <View className=" justify-center items-center mt-44">
+      <SafeAreaView className="flex-1">
+        <View className="justify-center items-center mt-44">
           {/* Play Button */}
           <TouchableOpacity
             className="bg-lime-500 pl-4 h-60 w-60 rounded-full justify-center items-center"
@@ -74,10 +107,29 @@ const WorkoutScreen = () => {
     );
   }
 
-  // Render when workout has started
+  if (isFinished) {
+    return (
+      <SafeAreaView className="flex-1 justify-center items-center">
+        <Text className="text-3xl text-white mb-4">
+          Congrats you are done for the day!
+        </Text>
+        <TouchableOpacity
+          onPress={undoFinishWorkout}
+          className="p-4 bg-yellow-500 rounded-lg"
+        >
+          <Text className="text-black text-lg">Undo</Text>
+        </TouchableOpacity>
+      </SafeAreaView>
+    );
+  }
+
   return (
-    <SafeAreaView className="flex-1 ">
-      <ExerciseTracking />
+    <SafeAreaView className="flex-1">
+      <ExerciseTracking
+        onFinishWorkout={finishWorkout}
+        setRating={setRating}
+        setNotes={setNotes}
+      />
     </SafeAreaView>
   );
 };

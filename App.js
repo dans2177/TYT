@@ -17,6 +17,8 @@ import {
   useSafeAreaInsets,
 } from "react-native-safe-area-context";
 import { fetchProfile } from "./src/redux/slices/userSlice";
+import { useFonts } from "expo-font";
+import { ActivityIndicator, View } from "react-native";
 
 const MainApp = () => {
   const { user, loading } = useSelector((state) => state.auth);
@@ -65,8 +67,22 @@ const MainApp = () => {
 };
 
 const App = () => {
+  // Load fonts
+  const [fontsLoaded] = useFonts({
+    Handjet: require("./src/assets/fonts/Handjet.ttf"),
+    // Add more fonts here if needed
+  });
+
+  if (!fontsLoaded) {
+    return (
+      <View className="flex-1 justify-center items-center ">
+        <ActivityIndicator size="large" color="#0000ff" />
+      </View>
+    );
+  }
+
   return (
-    <SafeAreaProvider>
+    <SafeAreaProvider className="">
       <Provider store={store}>
         <MainApp />
         <Toast topOffset={60} />

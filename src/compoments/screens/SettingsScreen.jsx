@@ -20,7 +20,7 @@ import {
 import { updateProfile } from "../../redux/slices/userSlice"; // Import updateProfile from userSlice
 import AssignMuscleGroupsModal from "../modals/AssignMuscleGroupsModal";
 import { logout } from "../../redux/slices/authSlice";
-
+import FeedbackModal from "../modals/FeedbackModal";
 // Muscle Groups
 const muscleGroups = [
   "Quads",
@@ -59,6 +59,8 @@ const SettingsScreen = () => {
   const [showInfo, setShowInfo] = useState(false);
   const [showDaySelector, setShowDaySelector] = useState(false); // State for day selector modal
   const [isInitialized, setIsInitialized] = useState(false); // Initialization flag
+
+  const [showFeedbackModal, setShowFeedbackModal] = useState(false); // State for Feedback Modal
 
   const navigator = useNavigation();
   const dispatch = useDispatch();
@@ -230,7 +232,7 @@ const SettingsScreen = () => {
           </TouchableOpacity>
 
           {/* Settings Title */}
-          <StyledText className="text-stone-300 text-4xl font-silkscreen">
+          <StyledText className="text-stone-300 text-4xl font-handjet">
             Settings
           </StyledText>
 
@@ -254,11 +256,16 @@ const SettingsScreen = () => {
                 </StyledText>
               </TouchableOpacity>
             </StyledView>
-            <StyledView className="bg-orange-500 p-4 rounded-xl">
-              <StyledText className="text-neutral-900 text-sm">
-                Total Workouts
-              </StyledText>
-              <StyledText className="text-black text-3xl">36</StyledText>
+            <StyledView className="bg-purple-600 p-4 h-full w- rounded-xl">
+              <TouchableOpacity
+                onPress={() => setShowFeedbackModal(true)}
+                className="flex-col  items-center"
+              >
+                <StyledText className="text-white text-lg mr-2">
+                  Feedback
+                </StyledText>
+                <Text className="text-white text-2xl">💬</Text>
+              </TouchableOpacity>
             </StyledView>
           </StyledView>
 
@@ -349,6 +356,11 @@ const SettingsScreen = () => {
                 </TouchableOpacity>
               ))}
             </ScrollView>
+            {/* Feedback Modal */}
+            <FeedbackModal
+              visible={showFeedbackModal}
+              onClose={() => setShowFeedbackModal(false)}
+            />
           </View>
         </ScrollView>
       </StyledView>

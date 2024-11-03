@@ -157,37 +157,31 @@ const StartSection = () => {
         <View className="flex-row h-40 justify-around">
           {/* Stretch Tile */}
           <TouchableOpacity
-            className="bg-lime-500 shadow-xl shadow-zinc-800 ml-2 rounded-3xl w-[45vw] p-4"
+            className="bg-lime-500 mx-2 shadow-xl shadow-zinc-800 rounded-3xl w-[45vw] flex-row justify-around items-center"
             onPress={handleCheckBoxPress}
           >
-            <View className="flex-row justify-around items-center">
-              <View>
-                <Text className="text-black text-2xl pl-2 font-bold">
-                  Stretch
-                </Text>
-                <View className="pt-4 pl-2">
-                  <MaterialIcons
-                    name={isChecked ? "check-box" : "check-box-outline-blank"}
-                    size={48}
-                    color="black"
-                  />
-                </View>
-              </View>
-              <View className="justify-center items-center w-1/3">
+            <View className="flex-1 h-full justify-around">
+              <Text className="text-black text-2xl pl-4 font-bold">
+                Stretch
+              </Text>
+              <View className="pt- pl-2">
                 <MaterialIcons
-                  name="self-improvement"
-                  size={56}
+                  name={isChecked ? "check-box" : "check-box-outline-blank"}
+                  size={48}
                   color="black"
                 />
               </View>
+            </View>
+            <View className="justify-center items-center pt-4 pr-4">
+              <MaterialIcons name="self-improvement" size={56} color="black" />
             </View>
           </TouchableOpacity>
 
           {/* Cardio Tile */}
           <View className="bg-orange-500 mx-2 shadow-xl shadow-zinc-800 rounded-3xl w-[45vw] flex-row justify-around items-center">
-            <View className="w-3/5">
+            <View className="flex-1 h-full justify-around">
               <Text className="text-black text-2xl pl-4 font-bold">Cardio</Text>
-              <View className="pt-4 pl-4">
+              <View className="pt-4 pl-2">
                 <MaterialIcons
                   name={
                     isCardioChecked ? "check-box" : "check-box-outline-blank"
@@ -199,13 +193,13 @@ const StartSection = () => {
               </View>
             </View>
 
-            <View className="right-4 w-2/5">
+            <View className="pt-4">
               {/* Custom Picker for exercise type */}
               <TouchableOpacity
                 className="rounded-lg"
                 onPress={openExerciseModal}
               >
-                <View className="pl-4 pt-1">
+                <View className="pr-4 ">
                   <MaterialIcons
                     name={
                       exercises.find((ex) => ex.value === selectedExercise)
@@ -218,7 +212,7 @@ const StartSection = () => {
               </TouchableOpacity>
               {/* Custom Dropdown for cardio minutes */}
               <TouchableOpacity
-                className="pl-3 rounded-lg shadow"
+                className="pr-3 rounded-lg shadow"
                 onPress={openMinutesModal}
               >
                 <Text className="text-black text-lg justify-start font-semibold">
@@ -237,23 +231,31 @@ const StartSection = () => {
           >
             <View
               className="flex-1 justify-center items-center"
-              style={{ backgroundColor: "rgba(0, 0, 0, 0.8)" }}
+              style={{ backgroundColor: "rgba(0, 0, 0, 0.5)" }} // Slightly less opacity for better visibility
             >
-              <View className="bg-orange-500 rounded-lg w-3/4 p-4">
-                <Text className="text-2xl mb-4">Select Duration</Text>
-                <ScrollView style={{ maxHeight: 400 }}>
+              <View className="bg-white rounded-lg w-4/5 p-6 shadow-lg">
+                <Text className="text-xl font-semibold mb-4 text-gray-800">
+                  Select Duration
+                </Text>
+                <ScrollView style={{ maxHeight: 300 }}>
                   {[...Array(60).keys()].map((x) => (
                     <TouchableOpacity
                       key={x + 1}
-                      className="p-4"
+                      className="p-3 border-b border-gray-200"
                       onPress={() => handleMinutesSelect(x + 1)}
                     >
-                      <Text className="text-xl">{x + 1} minutes</Text>
+                      <Text className="text-lg text-gray-700">
+                        {x + 1} minutes
+                      </Text>
                     </TouchableOpacity>
                   ))}
                 </ScrollView>
-                <TouchableOpacity onPress={closeMinutesModal}>
-                  <Text className="text-blue-900 mt-4 text-center">Close</Text>
+                <TouchableOpacity
+                  onPress={closeMinutesModal}
+                  className="mt-4"
+                  style={{ alignSelf: "center" }}
+                >
+                  <Text className="text-blue-600">Close</Text>
                 </TouchableOpacity>
               </View>
             </View>
@@ -268,10 +270,10 @@ const StartSection = () => {
           >
             <View
               className="flex-1 justify-center items-center"
-              style={{ backgroundColor: "rgba(0, 0, 0, 0.8)" }}
+              style={{ backgroundColor: "rgba(0, 0, 0, 0.5)" }}
             >
-              <View className="bg-orange-500 rounded-lg w-3/4 p-4">
-                <Text className="text-2xl mb-4 text-black">
+              <View className="bg-white rounded-lg w-4/5 p-6 shadow-lg">
+                <Text className="text-xl font-semibold mb-4 text-gray-800">
                   Select Exercise
                 </Text>
                 <FlatList
@@ -279,16 +281,22 @@ const StartSection = () => {
                   keyExtractor={(item) => item.value}
                   renderItem={({ item }) => (
                     <TouchableOpacity
-                      className="p-4 flex-row justify-between"
+                      className="p-3 border-b border-gray-200 flex-row justify-between items-center"
                       onPress={() => handleExerciseSelect(item)}
                     >
-                      <Text className="text-xl">{item.label}</Text>
-                      <MaterialIcons name={item.icon} size={32} color="black" />
+                      <Text className="text-lg text-gray-700">
+                        {item.label}
+                      </Text>
+                      <MaterialIcons name={item.icon} size={28} color="#555" />
                     </TouchableOpacity>
                   )}
                 />
-                <TouchableOpacity onPress={closeExerciseModal}>
-                  <Text className="text-blue-900 mt-4 text-center">Close</Text>
+                <TouchableOpacity
+                  onPress={closeExerciseModal}
+                  className="mt-4"
+                  style={{ alignSelf: "center" }}
+                >
+                  <Text className="text-blue-600">Close</Text>
                 </TouchableOpacity>
               </View>
             </View>

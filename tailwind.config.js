@@ -3,7 +3,11 @@ module.exports = {
   content: ["./App.{js,jsx,ts,tsx}", "./src/**/*.{js,jsx,ts,tsx}"],
   darkMode: "class", // or 'media'
   theme: {
-    extend: {},
+    extend: {
+      fontFamily: {
+        handjet: ["Handjet", "sans-serif"],
+      },
+    },
   },
   plugins: [],
 };
