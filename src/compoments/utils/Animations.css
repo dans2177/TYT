@@ -1,0 +1,71 @@
+/* Animations.css */
+@keyframes slide-in {
+  0% {
+    transform: translateY(-100%);
+    opacity: 0;
+  }
+  100% {
+    transform: translateY(0);
+    opacity: 1;
+  }
+}
+
+@keyframes fade-in {
+  0% {
+    opacity: 0;
+  }
+  100% {
+    opacity: 1;
+  }
+}
+
+@keyframes bounce-slow {
+  0%, 100% {
+    transform: translateY(0);
+  }
+  50% {
+    transform: translateY(-15px);
+  }
+}
+
+.text-glitch {
+  font-family: 'Press Start 2P', monospace;
+  position: relative;
+  display: inline-block;
+  color: #fff;
+  font-size: 2rem;
+  text-transform: uppercase;
+  animation: glitch-animation 1.5s infinite;
+}
+
+@keyframes glitch-animation {
+  0% {
+    text-shadow: 2px 2px #ff3b3b, -2px -2px #3bff3b;
+    transform: skewX(0deg);
+  }
+  50% {
+    text-shadow: -2px -2px #ff3b3b, 2px 2px #3bff3b;
+    transform: skewX(5deg);
+  }
+  100% {
+    text-shadow: 2px 2px #ff3b3b, -2px -2px #3bff3b;
+    transform: skewX(0deg);
+  }
+}
+
+/* Additional classes if needed */
+.animate-slide-in {
+  animation: slide-in 1s ease-out forwards;
+}
+
+.animate-fade-in {
+  animation: fade-in 2s ease-in forwards;
+}
+
+.animate-bounce-slow {
+  animation: bounce-slow 2s infinite;
+}
+
+.animate-pulse {
+  animation: pulse 1.5s infinite;
+}

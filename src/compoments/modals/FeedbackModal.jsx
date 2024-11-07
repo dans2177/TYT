@@ -62,7 +62,7 @@ const FeedbackModal = ({ visible, onClose }) => {
     <Modal
       visible={visible}
       transparent={true}
-      animationType="slide"
+      animationType="fade"
       onRequestClose={() => {
         if (!submitting) {
           onClose();

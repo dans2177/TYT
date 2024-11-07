@@ -1,27 +1,35 @@
+// SignInScreen.jsx
 import React, { useState, useEffect } from "react";
 import {
   View,
   TextInput,
-  Button,
-  Text,
   TouchableOpacity,
-  ImageBackground,
-  StyleSheet,
+  Text,
   KeyboardAvoidingView,
   Platform,
+  Modal,
+  StyleSheet,
 } from "react-native";
 import { useDispatch, useSelector } from "react-redux";
-import { signIn, setError } from "../../redux/slices/authSlice"; // Ensure correct path
+import { signIn, setError } from "../../redux/slices/authSlice";
 import Toast from "react-native-toast-message";
-import img1 from "../../assets/ez.webp";
-import Icon from "react-native-vector-icons/Ionicons"; // Using Ionicons as an example
+import Icon from "react-native-vector-icons/Ionicons";
+import { getAuth, sendPasswordResetEmail } from "firebase/auth";
+import { useFonts } from "expo-font";
+import GlitchText from "../utils/GlitchText"; // Import the GlitchText component
 
 const SignInScreen = ({ navigation }) => {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
-  const dispatch = useDispatch();
+  const [isForgotPasswordVisible, setForgotPasswordVisible] = useState(false);
+  const [resetEmail, setResetEmail] = useState("");
 
+  const dispatch = useDispatch();
   const { user, loading, error } = useSelector((state) => state.auth);
+
+  const [fontsLoaded] = useFonts({
+    "PressStart2P-Regular": require("../../assets/fonts/PressStart2P-Regular.ttf"),
+  });
 
   useEffect(() => {
     if (error) {
@@ -30,7 +38,7 @@ const SignInScreen = ({ navigation }) => {
         text1: "Sign In Failed",
         text2: error,
       });
-      dispatch(setError(null)); // Clear error after displaying
+      dispatch(setError(null));
     }
 
     if (user) {
@@ -56,124 +64,272 @@ const SignInScreen = ({ navigation }) => {
     dispatch(signIn({ email, password }));
   };
 
-  return (
-    <ImageBackground source={img1} style={styles.imageBackground}>
-      <KeyboardAvoidingView
-        behavior={Platform.OS === "ios" ? "padding" : "height"}
-        style={styles.keyboardAvoidingView}
-      >
-        <View style={styles.container}>
-          {/* Sign In Title */}
-          <Text style={styles.title}>Sign In</Text>
+  const handleForgotPassword = () => {
+    setForgotPasswordVisible(true);
+  };
 
-          {/* Input Fields and Button */}
-          <View style={styles.formContainer}>
+  const handlePasswordReset = async () => {
+    if (!resetEmail) {
+      Toast.show({
+        type: "error",
+        text1: "Invalid Input",
+        text2: "Please enter your email address.",
+      });
+      return;
+    }
+
+    const auth = getAuth();
+    try {
+      await sendPasswordResetEmail(auth, resetEmail);
+      setForgotPasswordVisible(false);
+      Toast.show({
+        type: "success",
+        text1: "Email Sent",
+        text2: "Please check your email to reset your password.",
+      });
+    } catch (error) {
+      Toast.show({
+        type: "error",
+        text1: "Error",
+        text2: error.message,
+      });
+    }
+  };
+
+  if (!fontsLoaded) {
+    return null;
+  }
+
+  return (
+    <KeyboardAvoidingView
+      behavior={Platform.OS === "ios" ? "padding" : "height"}
+      style={styles.container}
+    >
+      {/* Glitch Header positioned absolutely at the top */}
+      <View style={styles.glitchContainer}>
+        <GlitchText text="Workout Planner" />
+      </View>
+
+      {/* Main Content centered vertically */}
+      <View style={styles.contentContainer}>
+        {/* Sign In Title */}
+        <Text style={styles.title}>Sign In</Text>
+
+        {/* Input Fields */}
+        <View style={styles.inputContainer}>
+          <TextInput
+            placeholder="Email"
+            value={email}
+            onChangeText={setEmail}
+            keyboardType="email-address"
+            autoCapitalize="none"
+            placeholderTextColor="#888"
+            style={styles.input}
+          />
+          <TextInput
+            placeholder="Password"
+            value={password}
+            onChangeText={setPassword}
+            secureTextEntry
+            placeholderTextColor="#888"
+            style={styles.input}
+          />
+        </View>
+
+        {/* Sign In Button */}
+        <TouchableOpacity
+          style={[styles.button, loading && { opacity: 0.5 }]}
+          onPress={handleSignIn}
+          disabled={loading}
+        >
+          <Text style={styles.buttonText}>
+            {loading ? "Signing In..." : "Sign In"}
+          </Text>
+        </TouchableOpacity>
+
+        {/* Forgot Password Link */}
+        <TouchableOpacity
+          onPress={handleForgotPassword}
+          style={styles.forgotPassword}
+        >
+          <Text style={styles.forgotPasswordText}>Forgot Password?</Text>
+        </TouchableOpacity>
+
+        {/* Register Link */}
+        <TouchableOpacity
+          onPress={() => navigation.navigate("Register")}
+          style={styles.registerLink}
+        >
+          <View style={styles.registerIcon}>
+            <Icon name="person-add-outline" size={16} color="#fff" />
+          </View>
+          <Text style={styles.registerText}>Register</Text>
+        </TouchableOpacity>
+      </View>
+
+      {/* Forgot Password Modal */}
+      <Modal
+        animationType="slide"
+        transparent={true}
+        visible={isForgotPasswordVisible}
+        onRequestClose={() => {
+          setForgotPasswordVisible(false);
+        }}
+      >
+        <View style={styles.modalOverlay}>
+          <View style={styles.modalContainer}>
+            <Text style={styles.modalTitle}>Reset Password</Text>
             <TextInput
-              placeholder="Email"
-              value={email}
-              onChangeText={setEmail}
-              style={styles.input}
+              placeholder="Enter your email"
+              value={resetEmail}
+              onChangeText={setResetEmail}
               keyboardType="email-address"
               autoCapitalize="none"
-              autoCompleteType="email"
-              placeholderTextColor="#666"
+              placeholderTextColor="#888"
+              style={styles.modalInput}
             />
-            <TextInput
-              placeholder="Password"
-              value={password}
-              onChangeText={setPassword}
-              secureTextEntry
-              style={styles.input}
-              autoCompleteType="password"
-              placeholderTextColor="#666"
-            />
-            <View style={styles.buttonContainer}>
-              <Button
-                title={loading ? "Signing In..." : "Sign In"}
-                onPress={handleSignIn}
-                disabled={loading}
-                color="#ff7f50" // Coral color for visibility
-              />
-            </View>
             <TouchableOpacity
-              onPress={() => navigation.navigate("Register")}
-              style={styles.registerLink}
+              style={styles.modalButton}
+              onPress={handlePasswordReset}
             >
-              <View style={styles.iconBubble}>
-                <Icon name="person-add-outline" size={16} color="#fff" />
-              </View>
-              <Text style={styles.registerText}>Register</Text>
+              <Text style={styles.modalButtonText}>Send Reset Link</Text>
+            </TouchableOpacity>
+            <TouchableOpacity
+              style={styles.modalCancelButton}
+              onPress={() => setForgotPasswordVisible(false)}
+            >
+              <Text style={styles.modalButtonText}>Cancel</Text>
             </TouchableOpacity>
           </View>
         </View>
-      </KeyboardAvoidingView>
+      </Modal>
 
       {/* Toast Messages */}
       <Toast />
-    </ImageBackground>
+    </KeyboardAvoidingView>
   );
 };
 
 const styles = StyleSheet.create({
-  imageBackground: {
-    flex: 1,
-    resizeMode: "cover",
-  },
-  keyboardAvoidingView: {
-    flex: 1,
-  },
   container: {
     flex: 1,
-    padding: 20,
-    justifyContent: "space-between",
+    backgroundColor: "#121212",
+  },
+  glitchContainer: {
+    position: "absolute",
+    top: 50,
+    left: 0,
+    right: 0,
+    alignItems: "center",
+    paddingTop: Platform.OS === "android" ? 40 : 60, // Adjust for status bar height
+    zIndex: 1,
+  },
+  contentContainer: {
+    flex: 1,
+    justifyContent: "center",
+    paddingHorizontal: 24,
+    marginTop: Platform.OS === "android" ? 80 : 100, // Prevent overlap with GlitchText
   },
   title: {
-    fontSize: 32,
-    fontWeight: "bold",
-    color: "#fff",
+    fontSize: 24,
+    fontFamily: "PressStart2P-Regular",
     textAlign: "center",
-    marginTop: 60,
-    textShadowColor: "rgba(0, 0, 0, 0.75)",
-    textShadowOffset: { width: -1, height: 1 },
-    textShadowRadius: 10,
+    color: "#fff",
+    marginBottom: 24,
   },
-  formContainer: {
-    backgroundColor: "rgba(255, 255, 255, 0.85)",
-    padding: 20,
-    borderRadius: 12,
-    shadowColor: "#000",
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.3,
-    shadowRadius: 4,
-    elevation: 5, // For Android shadow
+  inputContainer: {
+    marginBottom: 16,
   },
   input: {
     height: 48,
-    borderColor: "#ccc",
-    borderWidth: 1,
-    marginBottom: 16,
-    paddingHorizontal: 12,
     borderRadius: 8,
-    backgroundColor: "#fff",
-    fontSize: 16,
-    color: "#333",
+    paddingHorizontal: 12,
+    marginBottom: 12,
+    backgroundColor: "#333",
+    color: "#fff",
+    fontFamily: "PressStart2P-Regular",
   },
-  buttonContainer: {
-    marginBottom: 16,
+  button: {
+    backgroundColor: "#ff6600",
+    borderRadius: 8,
+    paddingVertical: 12,
+    alignItems: "center",
+    marginTop: 16,
+  },
+  buttonText: {
+    color: "#fff",
+    fontFamily: "PressStart2P-Regular",
+    fontSize: 16,
+  },
+  forgotPassword: {
+    marginTop: 16,
+    alignItems: "center",
+  },
+  forgotPasswordText: {
+    color: "#ff6600",
+    fontFamily: "PressStart2P-Regular",
   },
   registerLink: {
     flexDirection: "row",
     alignItems: "center",
     justifyContent: "center",
+    marginTop: 24,
   },
-  iconBubble: {
-    backgroundColor: "#1e90ff",
-    borderRadius: 12,
-    padding: 6,
+  registerIcon: {
+    padding: 8,
     marginRight: 8,
+    backgroundColor: "#ff6600",
+    borderRadius: 50,
   },
   registerText: {
-    color: "#1e90ff",
+    color: "#ff6600",
+    fontFamily: "PressStart2P-Regular",
+    fontSize: 16,
+  },
+  modalOverlay: {
+    flex: 1,
+    backgroundColor: "rgba(0,0,0,0.5)",
+    justifyContent: "center",
+    alignItems: "center",
+  },
+  modalContainer: {
+    width: "85%",
+    backgroundColor: "#222",
+    padding: 20,
+    borderRadius: 8,
+  },
+  modalTitle: {
+    fontSize: 20,
+    fontFamily: "PressStart2P-Regular",
+    color: "#fff",
+    textAlign: "center",
+    marginBottom: 16,
+  },
+  modalInput: {
+    height: 48,
+    borderRadius: 8,
+    paddingHorizontal: 12,
+    backgroundColor: "#333",
+    color: "#fff",
+    fontFamily: "PressStart2P-Regular",
+    marginBottom: 16,
+  },
+  modalButton: {
+    backgroundColor: "#ff6600",
+    borderRadius: 8,
+    paddingVertical: 12,
+    alignItems: "center",
+    marginBottom: 8,
+  },
+  modalCancelButton: {
+    backgroundColor: "#666",
+    borderRadius: 8,
+    paddingVertical: 12,
+    alignItems: "center",
+  },
+  modalButtonText: {
+    color: "#fff",
+    fontFamily: "PressStart2P-Regular",
     fontSize: 16,
   },
 });

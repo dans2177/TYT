@@ -33,6 +33,7 @@ const muscleGroupCategories = {
   Triceps: "Arms",
   Abs: "Core",
   Obliques: "Core",
+  Forearms: "Forearms",
 };
 
 export const ExerciseModals = ({
@@ -214,8 +215,6 @@ export const ExerciseModals = ({
                 className="bg-[#1e1e1e] rounded-lg p-4 w-5/6 max-h-[90vh] overflow-y-auto"
                 style={{ maxHeight: "75%" }}
               >
-               
-
                 {/* Display Today's Muscle Groups */}
                 <View className="mb-4">
                   <View className="flex-row flex-wrap justify-center items-center">
@@ -250,7 +249,6 @@ export const ExerciseModals = ({
                     onChangeText={setSearchQuery}
                     style={{
                       backgroundColor: "#2a2a2a",
-                      fontFamily: "Poppins",
                     }}
                   />
                 </View>
@@ -269,9 +267,7 @@ export const ExerciseModals = ({
                           onPress={() => addExercise(exercise)}
                           className="p-2 border-b border-gray-700"
                         >
-                          <Text className="text-white font-[Poppins]">
-                            {exercise.title}
-                          </Text>
+                          <Text className="text-white ">{exercise.title}</Text>
                         </TouchableOpacity>
                       ))}
                     </View>
@@ -290,7 +286,7 @@ export const ExerciseModals = ({
                             onPress={() => addExercise(exercise)}
                             className="p-2 border-b border-gray-700"
                           >
-                            <Text className="text-white font-[Poppins]">
+                            <Text className="text-white ">
                               {exercise.title}
                             </Text>
                           </TouchableOpacity>
@@ -312,7 +308,7 @@ export const ExerciseModals = ({
                             onPress={() => addExercise(exercise)}
                             className="p-2 border-b border-gray-700"
                           >
-                            <Text className="text-white font-[Poppins]">
+                            <Text className="text-white ">
                               {exercise.title}
                             </Text>
                           </TouchableOpacity>
@@ -324,9 +320,7 @@ export const ExerciseModals = ({
 
                 {/* Cancel Button */}
                 <TouchableOpacity onPress={onClose} className="mt-2">
-                  <Text className="text-blue-400 text-center font-[Poppins]">
-                    Cancel
-                  </Text>
+                  <Text className="text-blue-400 text-center ">Cancel</Text>
                 </TouchableOpacity>
               </View>
             </TouchableWithoutFeedback>

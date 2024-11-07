@@ -46,6 +46,7 @@ const muscleGroups = [
   "Abs",
   "Obliques",
   "Lower Back",
+  "Forearms",
 ];
 
 // Mapping muscle groups to broader categories
@@ -63,6 +64,7 @@ const muscleGroupCategories = {
   Triceps: "Arms",
   Abs: "Core",
   Obliques: "Core",
+  Forearms: "Forearms",
 };
 
 const ExerciseScreen = () => {
@@ -79,7 +81,6 @@ const ExerciseScreen = () => {
   const [isEditing, setIsEditing] = useState(false);
   const [selectedMuscleTags, setSelectedMuscleTags] = useState([]);
   const [localErrorMessage, setLocalErrorMessage] = useState("");
-  const [weightDisplayOption, setWeightDisplayOption] = useState("max"); // 'max' or 'last'
 
   // Search State Variable
   const [searchQuery, setSearchQuery] = useState("");
@@ -145,7 +146,6 @@ const ExerciseScreen = () => {
     const updatedExercise = {
       title: formTitle.trim(),
       max: formMax ? parseInt(formMax) : 0,
-      lastWeight: formMax ? parseInt(formMax) : 0,
       lastUsed: getCurrentDate(),
       muscleTags: selectedMuscleTags,
       notes: formNotes.trim(),
@@ -275,7 +275,6 @@ const ExerciseScreen = () => {
     const updatedExercise = {
       title: formTitle.trim(),
       max: formMax ? parseInt(formMax) : 0,
-      lastWeight: formMax ? parseInt(formMax) : 0,
       lastUsed: getCurrentDate(),
       muscleTags: selectedMuscleTags,
       notes: formNotes.trim(),
@@ -353,44 +352,6 @@ const ExerciseScreen = () => {
         </View>
       </View>
 
-      {/* Toggle for Max Weight and Last Weight */}
-      {status !== "loading" && (
-        <View className="flex-row justify-center items-center mt-4 pb-2">
-          <TouchableOpacity
-            onPress={() => setWeightDisplayOption("max")}
-            className={`px-4 py-2 mx-1 rounded-full ${
-              weightDisplayOption === "max" ? "bg-orange-500" : "bg-gray-200"
-            }`}
-            accessibilityLabel="Max Weight Toggle"
-            accessibilityHint="Displays the maximum weight for each exercise"
-          >
-            <Text
-              className={`font-bold ${
-                weightDisplayOption === "max" ? "text-white" : "text-black"
-              }`}
-            >
-              Max Weight
-            </Text>
-          </TouchableOpacity>
-          <TouchableOpacity
-            onPress={() => setWeightDisplayOption("last")}
-            className={`px-4 py-2 mx-1 rounded-full ${
-              weightDisplayOption === "last" ? "bg-orange-500" : "bg-gray-200"
-            }`}
-            accessibilityLabel="Last Weight Toggle"
-            accessibilityHint="Displays the last used weight for each exercise"
-          >
-            <Text
-              className={`font-bold ${
-                weightDisplayOption === "last" ? "text-white" : "text-black"
-              }`}
-            >
-              Last Weight
-            </Text>
-          </TouchableOpacity>
-        </View>
-      )}
-
       {/* Loading Indicator */}
       {status === "loading" && exercisesFromState.length === 0 && (
         <View className="flex-1 justify-center items-center">
@@ -420,12 +381,7 @@ const ExerciseScreen = () => {
                 {group}
               </Text>
               {exercises.map((exercise) => {
-                const displayWeight =
-                  weightDisplayOption === "max"
-                    ? exercise.max
-                    : exercise.lastWeight !== undefined
-                    ? exercise.lastWeight
-                    : "N/A";
+                const displayWeight = exercise.max;
 
                 return (
                   <TouchableOpacity
@@ -594,7 +550,6 @@ const ExerciseScreen = () => {
                         Save Exercise
                       </Text>
                     </TouchableOpacity>
-                    
                   </View>
                 </ScrollView>
               </KeyboardAvoidingView>

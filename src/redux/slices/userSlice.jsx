@@ -1,3 +1,4 @@
+// userSlice.js
 import { createSlice } from "@reduxjs/toolkit";
 import { getAuth } from "firebase/auth";
 import {
@@ -10,6 +11,8 @@ import {
 
 const initialState = {
   profile: {
+    firstName: null, // Added first name
+    lastName: null, // Added last name
     height: { feet: null, inches: null }, // Store height as an object
     weight: null, // in pounds
     workoutDay: null,
@@ -93,6 +96,8 @@ export const fetchProfile = () => async (dispatch) => {
     } else {
       // Create a new profile with email if it doesn't exist
       const newProfile = {
+        firstName: null,
+        lastName: null,
         height: { feet: null, inches: null },
         weight: null,
         workoutDay: 1,

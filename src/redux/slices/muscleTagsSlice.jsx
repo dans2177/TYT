@@ -105,9 +105,6 @@ const muscleTagsSlice = createSlice({
       .addCase(saveMuscleTags.fulfilled, (state, action) => {
         state.status = "succeeded";
         state.muscleTags = action.payload;
-        Toast.show("Muscle tags saved successfully!", {
-          duration: Toast.durations.SHORT,
-        });
       })
       .addCase(saveMuscleTags.rejected, (state, action) => {
         state.status = "failed";
@@ -123,9 +120,6 @@ const muscleTagsSlice = createSlice({
       .addCase(loadMuscleTags.fulfilled, (state, action) => {
         state.status = "succeeded";
         state.muscleTags = action.payload; // Action payload will include at least one empty day
-        Toast.show("Muscle tags loaded successfully!", {
-          duration: Toast.durations.SHORT,
-        });
       })
       .addCase(loadMuscleTags.rejected, (state, action) => {
         state.status = "failed";

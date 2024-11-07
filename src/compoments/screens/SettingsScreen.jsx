@@ -1,4 +1,3 @@
-// SettingsScreen.js
 import React, { useState, useEffect, useRef } from "react";
 import {
   View,
@@ -17,10 +16,12 @@ import {
   saveMuscleTags,
   loadMuscleTags,
 } from "../../redux/slices/muscleTagsSlice";
-import { updateProfile } from "../../redux/slices/userSlice"; // Import updateProfile from userSlice
+import { updateProfile } from "../../redux/slices/userSlice";
 import AssignMuscleGroupsModal from "../modals/AssignMuscleGroupsModal";
 import { logout } from "../../redux/slices/authSlice";
 import FeedbackModal from "../modals/FeedbackModal";
+import WorkoutSetupAndMuscleGroups from "../utils/WorkoutSetupAndMuscleGroups"; // Import the new component
+
 // Muscle Groups
 const muscleGroups = [
   "Quads",
@@ -57,60 +58,52 @@ const StyledText = styled(Text);
 const SettingsScreen = () => {
   const [selectedGroups, setSelectedGroups] = useState([]);
   const [showInfo, setShowInfo] = useState(false);
-  const [showDaySelector, setShowDaySelector] = useState(false); // State for day selector modal
-  const [isInitialized, setIsInitialized] = useState(false); // Initialization flag
-
-  const [showFeedbackModal, setShowFeedbackModal] = useState(false); // State for Feedback Modal
+  const [showDaySelector, setShowDaySelector] = useState(false);
+  const [isInitialized, setIsInitialized] = useState(false);
+  const [showFeedbackModal, setShowFeedbackModal] = useState(false);
 
   const navigator = useNavigation();
   const dispatch = useDispatch();
 
   // Redux selectors
-  const { muscleTags = {}, status } = useSelector((state) => state.muscleTags); // Default to empty object if undefined
-  const workoutDay = useSelector((state) => state.user.profile.workoutDay); // Get workoutDay from user slice
+  const { muscleTags = {}, status } = useSelector((state) => state.muscleTags);
+  const workoutDay = useSelector((state) => state.user.profile.workoutDay);
 
-  const [selectedDays, setSelectedDays] = useState({}); // Initialize with an empty object
-  const lastSavedDays = useRef(selectedDays); // Keep track of the last saved version
+  const [selectedDays, setSelectedDays] = useState({});
+  const lastSavedDays = useRef(selectedDays);
 
-  // Load muscle tags when the component mounts
   useEffect(() => {
     dispatch(loadMuscleTags());
   }, [dispatch]);
 
-  // Update selectedDays once muscleTags are loaded (only once)
   useEffect(() => {
     if (status === "succeeded" && !isInitialized) {
-      setSelectedDays(muscleTags || { 1: [] }); // Use the muscle tags if they exist, or an empty object with one day
-      setIsInitialized(true); // Prevent future updates
+      setSelectedDays(muscleTags || { 1: [] });
+      setIsInitialized(true);
     }
   }, [muscleTags, status, isInitialized]);
 
-  // Save only when selectedDays changes, ensuring minimal updates
   useEffect(() => {
     if (
       JSON.stringify(selectedDays) !== JSON.stringify(lastSavedDays.current)
     ) {
       dispatch(saveMuscleTags(selectedDays));
-      lastSavedDays.current = selectedDays; // Update the last saved state
+      lastSavedDays.current = selectedDays;
     }
   }, [selectedDays, dispatch]);
 
-  // Dynamically determine the number of days based on selectedDays keys
   const days = Object.keys(selectedDays).length;
 
   const incrementDays = () => {
     if (days < 7) {
-      // Check if days are less than 7
       setSelectedDays((prev) => {
         const newSelectedDays = { ...prev };
-        // Determine the next day ID as the maximum existing day ID + 1
         const dayIds = Object.keys(newSelectedDays).map(Number);
         const nextDay = Math.max(...dayIds) + 1;
-        newSelectedDays[nextDay] = []; // Add a new empty day
+        newSelectedDays[nextDay] = [];
         return newSelectedDays;
       });
     } else {
-      // Optionally, provide feedback to the user
       Alert.alert("Maximum Days Reached", "You can set up to 7 workout days.");
     }
   };
@@ -153,19 +146,16 @@ const SettingsScreen = () => {
     }));
   };
 
-  // Function to handle selecting a new workout day
   const handleSelectWorkoutDay = (dayId) => {
     dispatch(updateProfile({ workoutDay: Number(dayId) }));
     setShowDaySelector(false);
   };
 
-  // Get list of days that have muscle tags
   const daysWithTags = Object.keys(selectedDays).filter(
     (dayId) => selectedDays[dayId].length > 0
   );
 
   const handleLogout = () => {
-    //alert and dispatch logout
     Alert.alert("Logout", "Are you sure you want to logout?", [
       {
         text: "Cancel",
@@ -180,20 +170,17 @@ const SettingsScreen = () => {
 
   return (
     <SafeAreaView className="flex-1 bg-zinc-900 ">
-      {/* Assign Muscle Group Support Modal */}
       <AssignMuscleGroupsModal
         visible={showInfo}
         onClose={() => setShowInfo(false)}
       />
-
-      {/* Day Selector Modal */}
       <Modal
         visible={showDaySelector}
         transparent={true}
-        animationType="slide"
+        animationType="fade"
         onRequestClose={() => setShowDaySelector(false)}
       >
-        <View className="flex-1 justify-center items-center bg-black bg-opacity-50">
+        <View className="flex-1 justify-center items-center bg-black bg-opacity-50 ">
           <View className="bg-white rounded-lg w-4/5 p-6">
             <Text className="text-xl font-bold mb-4">Select Current Day</Text>
             {daysWithTags.length > 0 ? (
@@ -224,26 +211,20 @@ const SettingsScreen = () => {
         </View>
       </Modal>
 
-      <StyledView className="flex-1 justify-start">
-        <StyledView className="flex-row justify-between items-center mb-4 p-4">
-          {/* Home Button */}
+      <StyledView className="flex-1 justify-start ">
+        <StyledView className="flex-row justify-between items-center  p-2">
           <TouchableOpacity onPress={() => navigator.navigate("Home")}>
             <StyledText className="text-white text-3xl">🏠</StyledText>
           </TouchableOpacity>
-
-          {/* Settings Title */}
           <StyledText className="text-stone-300 text-4xl font-handjet">
             Settings
           </StyledText>
-
-          {/* Logout Button */}
           <TouchableOpacity onPress={handleLogout}>
             <StyledText className="text-white text-3xl">🚪</StyledText>
           </TouchableOpacity>
         </StyledView>
 
         <ScrollView className="pt-4">
-          {/* Stats */}
           <StyledView className="flex-row justify-around items-center py-2 bg-orange-700 mx-4 rounded-xl">
             <Text className="text-white text-3xl">🏋️</Text>
             <StyledView className="bg-orange-500 p-4 rounded-xl">
@@ -256,10 +237,10 @@ const SettingsScreen = () => {
                 </StyledText>
               </TouchableOpacity>
             </StyledView>
-            <StyledView className="bg-purple-600 p-4 h-full w- rounded-xl">
+            <StyledView className="bg-purple-600 p-4 h-full rounded-xl">
               <TouchableOpacity
                 onPress={() => setShowFeedbackModal(true)}
-                className="flex-col  items-center"
+                className="flex-col items-center"
               >
                 <StyledText className="text-white text-lg mr-2">
                   Feedback
@@ -269,101 +250,29 @@ const SettingsScreen = () => {
             </StyledView>
           </StyledView>
 
-          {/* Workout Setup */}
-          <View className="flex-row justify-between items-center px-4 pt-4">
-            <Text className="text-neutral-100 text-3xl">Workout Setup</Text>
-            <TouchableOpacity onPress={() => setShowInfo(true)}>
-              <StyledText className="text-white text-3xl">ℹ️</StyledText>
-            </TouchableOpacity>
-          </View>
-
-          <View className="bg-stone-800 mx-4 my-2 rounded-xl p-4">
-            <Text className="text-neutral-100">
-              How many days a week do you workout?
-            </Text>
-            <StyledView className="flex-row justify-center items-center py-4">
-              <TouchableOpacity
-                onPress={decrementDays}
-                className={`bg-red-600 rounded-full h-14 w-14 flex items-center justify-center mr-4 ${
-                  days <= 1 ? "opacity-50" : ""
-                }`}
-                disabled={days <= 1} // Disable if days <=1
-              >
-                <StyledText className="text-white text-2xl">-</StyledText>
-              </TouchableOpacity>
-              <StyledText className="text-white text-3xl">{days}</StyledText>
-              <TouchableOpacity
-                onPress={incrementDays}
-                className={`bg-amber-600 rounded-full h-14 w-14 flex items-center justify-center ml-4 ${
-                  days >= 7 ? "opacity-50" : ""
-                }`}
-                disabled={days >= 7} // Disable if days >=7
-              >
-                <StyledText className="text-white text-2xl">+</StyledText>
-              </TouchableOpacity>
-            </StyledView>
-          </View>
-
-          {/* Muscle Groups */}
-          <View className="bg-stone-800 mx-4 rounded-xl p-4">
-            <View className="flex-row justify-between items-start">
-              <Text className="text-neutral-100">
-                What do you hit each day?
-              </Text>
-            </View>
-
-            {/* Group Selection */}
-            <StyledView className="flex-wrap flex-row justify-center p-2">
-              {muscleGroups.map((group) => (
-                <TouchableOpacity
-                  key={group}
-                  onPress={() => toggleSelection(group)}
-                  className={`px-4 py-2 m-1 rounded-full ${
-                    selectedGroups.includes(group)
-                      ? "bg-orange-500"
-                      : "bg-gray-200"
-                  }`}
-                >
-                  <StyledText className="font-bold">{group}</StyledText>
-                </TouchableOpacity>
-              ))}
-            </StyledView>
-
-            {/* Day-wise Muscle Groups */}
-            <ScrollView className="rounded-xl">
-              {Object.keys(selectedDays).map((dayId, index) => (
-                <TouchableOpacity
-                  key={dayId}
-                  onPress={() => dropOnDay(dayId)}
-                  className={`${
-                    dayColors[index % dayColors.length]
-                  } p-2 mb-2 rounded-lg`}
-                >
-                  <StyledText className="text-white text-xl mr-2">
-                    {`Day ${dayId}`}
-                  </StyledText>
-                  <StyledView className="flex-wrap flex-row">
-                    {(selectedDays[dayId] || []).map((group, idx) => (
-                      <TouchableOpacity
-                        key={`${group}-${idx}`}
-                        onLongPress={() => removeFromDay(dayId, group)}
-                        className="bg-gray-900 px-3 py-2 m-1 rounded-full"
-                      >
-                        <StyledText className="text-white">{group}</StyledText>
-                      </TouchableOpacity>
-                    ))}
-                  </StyledView>
-                </TouchableOpacity>
-              ))}
-            </ScrollView>
-            {/* Feedback Modal */}
-            <FeedbackModal
-              visible={showFeedbackModal}
-              onClose={() => setShowFeedbackModal(false)}
-            />
-          </View>
+          {/* Use the shared WorkoutSetupAndMuscleGroups component */}
+          <WorkoutSetupAndMuscleGroups
+            days={days}
+            incrementDays={incrementDays}
+            decrementDays={decrementDays}
+            selectedGroups={selectedGroups}
+            toggleSelection={toggleSelection}
+            selectedDays={selectedDays}
+            dropOnDay={dropOnDay}
+            removeFromDay={removeFromDay}
+            muscleGroups={muscleGroups}
+            dayColors={dayColors}
+            showFeedbackModal={showFeedbackModal}
+            setShowFeedbackModal={setShowFeedbackModal}
+          />
         </ScrollView>
       </StyledView>
+
+      {/* Render the FeedbackModal */}
+      <FeedbackModal
+        visible={showFeedbackModal}
+        onClose={() => setShowFeedbackModal(false)}
+      />
     </SafeAreaView>
   );
 };
