@@ -1,5 +1,3 @@
-// src/components/utils/ExerciseTracking.jsx
-
 import React, { useEffect, useState } from "react";
 import {
   Text,
@@ -19,17 +17,20 @@ import {
   deleteExerciseTrackingData,
   updateExerciseTrackingDataInStore,
 } from "../../redux/slices/exerciseTrackingSlice";
-import {
-  loadExercises,
-  addNewExercise,
-} from "../../redux/slices/exerciseSlice";
+import { loadExercises } from "../../redux/slices/exerciseSlice";
 import { updateWorkoutInFirestore } from "../../redux/slices/workoutSlice";
 import { Ionicons } from "@expo/vector-icons";
 import StartSection from "../utils/StartSection";
 import { ExerciseModals } from "../modals/ExerciseModals";
-import EndWorkoutModal from "../modals/EndWorkoutModal"; // Import the new modal component
+import EndWorkoutModal from "../modals/EndWorkoutModal";
 
-const ExerciseTracking = () => {
+const ExerciseTracking = ({
+  onFinishWorkout,
+  setRating,
+  setNotes,
+  rating,
+  notes,
+}) => {
   const dispatch = useDispatch();
   const workoutId = useSelector((state) => state.workout.data?.id);
   const exerciseTrackingData = useSelector(
@@ -41,8 +42,6 @@ const ExerciseTracking = () => {
   const [activeExerciseIndex, setActiveExerciseIndex] = useState(null);
   const [showExerciseListModal, setShowExerciseListModal] = useState(false);
   const [showEndWorkoutModal, setShowEndWorkoutModal] = useState(false);
-  const [rating, setRating] = useState(0);
-  const [notes, setNotes] = useState("");
   const [focusedInput, setFocusedInput] = useState(null);
 
   useEffect(() => {
@@ -134,10 +133,6 @@ const ExerciseTracking = () => {
     );
   };
 
-  const showExerciseInfo = (exerciseIndex) => {
-    // Implement exercise info display if needed
-  };
-
   const addExercise = (exercise) => {
     const newExerciseData = {
       exerciseId: exercise.id,
@@ -169,21 +164,8 @@ const ExerciseTracking = () => {
         notes,
       })
     );
-    setIsFinished(true);
     setShowEndWorkoutModal(false);
-  };
-
-  const undoFinishWorkout = () => {
-    setIsFinished(false);
-    dispatch(
-      updateWorkoutInFirestore({
-        ...workoutData,
-        isFinished: false,
-        isRated: false,
-        rating: 0,
-        notes: "",
-      })
-    );
+    onFinishWorkout(); // Call the function passed via props
   };
 
   const renderHeader = () => <StartSection />;
@@ -223,16 +205,6 @@ const ExerciseTracking = () => {
               {correspondingExercise?.lastUsedReps || 0} reps
             </Text>
           </View>
-          <TouchableOpacity
-            onPress={() => showExerciseInfo(exerciseIndex)}
-            className="p-4"
-          >
-            <Ionicons
-              name="information-circle-outline"
-              size={24}
-              color="white"
-            />
-          </TouchableOpacity>
         </View>
 
         <View className="flex-row flex-wrap mt-2 justify-start pb-4 px-2">

@@ -11,12 +11,15 @@ import {
 } from "../../redux/slices/workoutSlice";
 import { Ionicons } from "@expo/vector-icons";
 import ExerciseTracking from "../utils/ExerciseTracking";
+import LottieView from "lottie-react-native"; // For animations
+import { updateProfile } from "../../redux/slices/userSlice"; // Import updateProfile
 
 const WorkoutScreen = () => {
   const dispatch = useDispatch();
   const [isFinished, setIsFinished] = useState(false);
   const [rating, setRating] = useState(0);
   const [notes, setNotes] = useState("");
+  const [isAnimationFinished, setIsAnimationFinished] = useState(false);
 
   // Load muscle tags and workout data on component mount
   useEffect(() => {
@@ -28,10 +31,25 @@ const WorkoutScreen = () => {
   const workoutDay = useSelector((state) => state.user.profile.workoutDay);
   const workoutData = useSelector((state) => state.workout.data);
 
-  // Console log muscle tags and workout days for debugging
-  console.log("muscleTags", muscleTags);
-  console.log("workoutDay", workoutDay);
-  console.log("workoutData", workoutData);
+  // Compute total days
+  const totalDays = Object.keys(muscleTags).length;
+
+  // Update isFinished state when workoutData changes
+  useEffect(() => {
+    if (workoutData?.isFinished) {
+      setIsFinished(true);
+    } else {
+      setIsFinished(false);
+    }
+  }, [workoutData]);
+
+  // Initialize rating and notes from workoutData
+  useEffect(() => {
+    if (workoutData) {
+      setRating(workoutData.rating || 0);
+      setNotes(workoutData.notes || "");
+    }
+  }, [workoutData]);
 
   const handleStartWorkout = () => {
     console.log("startWorkout");
@@ -39,6 +57,7 @@ const WorkoutScreen = () => {
   };
 
   const finishWorkout = () => {
+    // Update the workout data
     dispatch(
       updateWorkoutInFirestore({
         ...workoutData,
@@ -48,23 +67,48 @@ const WorkoutScreen = () => {
         notes,
       })
     );
+
+    // Update the user's workoutDay
+    let nextWorkoutDay = workoutDay + 1;
+    if (nextWorkoutDay > totalDays) {
+      nextWorkoutDay = 1;
+    }
+
+    // Dispatch updateProfile to update the user's workoutDay
+    dispatch(updateProfile({ workoutDay: nextWorkoutDay }));
+
     setIsFinished(true);
+    setIsAnimationFinished(false);
   };
 
   const undoFinishWorkout = () => {
-    setIsFinished(false);
+    // Update the workout data
     dispatch(
       updateWorkoutInFirestore({
         ...workoutData,
         isFinished: false,
         isRated: false,
-        rating: 0,
-        notes: "",
+        // Do not reset rating and notes
       })
     );
+
+    // Update the user's workoutDay
+    let prevWorkoutDay = workoutDay - 1;
+    if (prevWorkoutDay < 1) {
+      prevWorkoutDay = totalDays;
+    }
+
+    // Dispatch updateProfile to update the user's workoutDay
+    dispatch(updateProfile({ workoutDay: prevWorkoutDay }));
+
+    setIsFinished(false);
+    setIsAnimationFinished(false);
   };
 
-  // Render when workout hasn't started or is finished
+  // Import the confetti animation JSON file using require
+  const ConfettiAnimation = require("../../assets/lottie/lofi.json");
+
+  // Render when workout hasn't started
   if (!workoutData || !workoutData.isStarted) {
     return (
       <SafeAreaView className="flex-1">
@@ -107,28 +151,69 @@ const WorkoutScreen = () => {
     );
   }
 
+  // Render when workout is finished
   if (isFinished) {
     return (
-      <SafeAreaView className="flex-1 justify-center items-center">
-        <Text className="text-3xl text-white mb-4">
-          Congrats you are done for the day!
-        </Text>
-        <TouchableOpacity
-          onPress={undoFinishWorkout}
-          className="p-4 bg-yellow-500 rounded-lg"
+      <SafeAreaView style={{ flex: 1 }}>
+        <View
+          style={{
+            flex: 1,
+            justifyContent: "center",
+            alignItems: "center",
+            position: "relative",
+          }}
         >
-          <Text className="text-black text-lg">Undo</Text>
-        </TouchableOpacity>
+          {/* Other Content */}
+          <Text className="text-4xl text-white mb-4 font-bold text-center">
+            Great Job!
+          </Text>
+          <Text className="text-lg text-white mb-8 text-center px-4">
+            You've completed today's workout.
+          </Text>
+
+          <TouchableOpacity
+            onPress={undoFinishWorkout}
+            className=" absolute bottom-10 p-4 bg-white rounded-full"
+            style={{ elevation: 5 }}
+          >
+            <Ionicons name="arrow-back" size={24} color="#3b5998" />
+          </TouchableOpacity>
+
+          {/* Lottie Animation */}
+          {!isAnimationFinished && (
+            <View
+              style={{
+                position: "absolute",
+                top: 0,
+                left: 0,
+                right: 0,
+                bottom: 0,
+                zIndex: 1,
+              }}
+            >
+              <LottieView
+                source={ConfettiAnimation}
+                autoPlay
+                loop={false}
+                style={{ width: "100%", height: "100%" }}
+                onAnimationFinish={() => setIsAnimationFinished(true)}
+              />
+            </View>
+          )}
+        </View>
       </SafeAreaView>
     );
   }
 
+  // Render the ExerciseTracking component when workout is in progress
   return (
     <SafeAreaView className="flex-1">
       <ExerciseTracking
         onFinishWorkout={finishWorkout}
         setRating={setRating}
         setNotes={setNotes}
+        rating={rating}
+        notes={notes}
       />
     </SafeAreaView>
   );

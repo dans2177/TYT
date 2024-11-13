@@ -10,7 +10,7 @@ import {
   doc,
   query,
   where,
-  updateDoc, // Add this line
+  updateDoc,
 } from "firebase/firestore";
 import { auth, db } from "../../api/firebase"; // Import Firestore and Auth instances
 
@@ -69,6 +69,32 @@ export const loadWorkout = createAsyncThunk(
       }
 
       return workout;
+    } catch (error) {
+      return rejectWithValue(error.message);
+    }
+  }
+);
+
+// Async thunk for loading all workouts from Firestore
+export const loadAllWorkouts = createAsyncThunk(
+  "workout/loadAllWorkouts",
+  async (_, { rejectWithValue }) => {
+    try {
+      const user = auth.currentUser;
+      if (!user) throw new Error("No user authenticated");
+
+      const userId = user.uid;
+      const workoutsRef = collection(db, "users", userId, "workouts");
+
+      // Fetch all workouts
+      const querySnapshot = await getDocs(workoutsRef);
+
+      const workouts = querySnapshot.docs.map((docSnap) => ({
+        id: docSnap.id,
+        ...docSnap.data(),
+      }));
+
+      return workouts;
     } catch (error) {
       return rejectWithValue(error.message);
     }
@@ -165,17 +191,23 @@ export const startWorkout = createAsyncThunk(
     }
   }
 );
+
 // Initial state for the slice
 const initialState = {
   data: null, // Holds a single workout object
+  workoutsList: [], // Holds all workouts
   fetchStatus: "idle", // 'idle' | 'loading' | 'succeeded' | 'failed'
   fetchError: null,
+  fetchAllStatus: "idle", // Status for loading all workouts
+  fetchAllError: null,
   addStatus: "idle",
   addError: null,
   updateStatus: "idle",
   updateError: null,
   deleteStatus: "idle",
   deleteError: null,
+  startStatus: "idle",
+  startError: null,
 };
 
 // Create the slice
@@ -199,6 +231,20 @@ const workoutsSlice = createSlice({
       .addCase(loadWorkout.rejected, (state, action) => {
         state.fetchStatus = "failed";
         state.fetchError = action.payload;
+      })
+
+      // Load All Workouts
+      .addCase(loadAllWorkouts.pending, (state) => {
+        state.fetchAllStatus = "loading";
+        state.fetchAllError = null;
+      })
+      .addCase(loadAllWorkouts.fulfilled, (state, action) => {
+        state.fetchAllStatus = "succeeded";
+        state.workoutsList = action.payload;
+      })
+      .addCase(loadAllWorkouts.rejected, (state, action) => {
+        state.fetchAllStatus = "failed";
+        state.fetchAllError = action.payload;
       })
 
       // Add Workout
@@ -243,7 +289,7 @@ const workoutsSlice = createSlice({
         state.deleteError = action.payload;
       })
 
-         // Start Workout
+      // Start Workout
       .addCase(startWorkout.pending, (state) => {
         state.startStatus = "loading";
         state.startError = null;

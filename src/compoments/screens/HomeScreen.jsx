@@ -15,7 +15,7 @@ const HomeScreen = () => {
       {/* Top Banner */}
       <View className="flex-row justify-between items-center mt-12 mb-4 px-6 pt-4">
         {/* Left Icon */}
-        <TouchableOpacity>
+        <TouchableOpacity onPress={() => navigation.navigate("WorkoutHistory")}>
           <Text className="text-3xl">💪</Text>
         </TouchableOpacity>
 

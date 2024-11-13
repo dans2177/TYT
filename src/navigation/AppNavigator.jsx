@@ -8,7 +8,7 @@ import HomeScreen from "../compoments/screens/HomeScreen";
 import LoadingScreen from "../compoments/screens/LoadingScreen";
 import SettingsScreen from "../compoments/screens/SettingsScreen";
 import ExerciseScreen from "../compoments/screens/ExerciseScreen";
-
+import WorkoutHistory from "../compoments/screens/WorkoutHistory";
 
 const Stack = createStackNavigator();
 
@@ -53,7 +53,7 @@ const AppNavigator = ({ user }) => {
           options={{ headerShown: false }}
         />
       ) : (
-        // User logged in and intro is complete, show Home and Settings
+        // User logged in and intro is complete, show Home and other screens
         <>
           <Stack.Screen
             name="Home"
@@ -100,6 +100,27 @@ const AppNavigator = ({ user }) => {
                   ],
                 },
               }),
+            }}
+          />
+          <Stack.Screen
+            name="WorkoutHistory"
+            component={WorkoutHistory}
+            options={{
+              headerShown: false,
+              cardStyleInterpolator: ({ current, layouts }) => {
+                return {
+                  cardStyle: {
+                    transform: [
+                      {
+                        translateX: current.progress.interpolate({
+                          inputRange: [0, 1],
+                          outputRange: [-layouts.screen.width, 0],
+                        }),
+                      },
+                    ],
+                  },
+                };
+              },
             }}
           />
         </>
