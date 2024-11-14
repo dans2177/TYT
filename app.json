@@ -1,6 +1,6 @@
 {
   "expo": {
-    "name": "my-app",
+    "name": "Workout App - Dont Develop",
     "slug": "my-app",
     "version": "1.0.0",
     "orientation": "portrait",
@@ -10,7 +10,8 @@
       "backgroundColor": "#ffffff"
     },
     "ios": {
-      "supportsTablet": true
+      "supportsTablet": true,
+      "bundleIdentifier": "com.si.workout"
     },
     "android": {
       "adaptiveIcon": {
@@ -18,6 +19,11 @@
       },
       "package": "com.si.workout"
     },
-    "web": {}
+    "web": {},
+    "extra": {
+      "eas": {
+        "projectId": "4e2ad35f-4b33-41df-9d36-8017f5175940"
+      }
+    }
   }
 }
