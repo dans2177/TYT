@@ -4,7 +4,6 @@ import {
   Text,
   Dimensions,
   Animated,
-  ActivityIndicator,
 } from "react-native";
 import { LinearGradient } from "expo-linear-gradient";
 

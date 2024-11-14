@@ -87,7 +87,7 @@ const FeedbackModal = ({ visible, onClose }) => {
           />
 
           {submitting ? (
-            <ActivityIndicator size="large" color="#6B21A8" />
+            <ActivityIndicator size={50} color="#6B21A8" />
           ) : (
             <View className="flex-row justify-center items-center">
               <TouchableOpacity

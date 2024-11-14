@@ -19,7 +19,11 @@ import {
 import { fetchProfile } from "./src/redux/slices/userSlice";
 import { useFonts } from "expo-font";
 import { ActivityIndicator, View } from "react-native";
+import { NativeWindStyleSheet } from "nativewind";
 
+NativeWindStyleSheet.setOutput({
+  default: "native",
+});
 const MainApp = () => {
   const { user, loading } = useSelector((state) => state.auth);
   const dispatch = useDispatch();

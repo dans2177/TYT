@@ -5,10 +5,10 @@ import SignInScreen from "../compoments/screens/SignInScreen";
 import RegisterScreen from "../compoments/screens/RegisterScreen";
 import IntroModal from "../compoments/modals/IntroModal";
 import HomeScreen from "../compoments/screens/HomeScreen";
-import LoadingScreen from "../compoments/screens/LoadingScreen";
-import SettingsScreen from "../compoments/screens/SettingsScreen";
 import ExerciseScreen from "../compoments/screens/ExerciseScreen";
+import SettingsScreen from "../compoments/screens/SettingsScreen";
 import WorkoutHistory from "../compoments/screens/WorkoutHistory";
+import LoadingScreen from "../compoments/screens/LoadingScreen";
 
 const Stack = createStackNavigator();
 

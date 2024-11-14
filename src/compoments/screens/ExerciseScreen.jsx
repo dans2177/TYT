@@ -355,7 +355,7 @@ const ExerciseScreen = () => {
       {/* Loading Indicator */}
       {status === "loading" && exercisesFromState.length === 0 && (
         <View className="flex-1 justify-center items-center">
-          <ActivityIndicator size="large" color="#00FF00" />
+          <ActivityIndicator size="20" color="#00FF00" />
           <Text className="text-white text-lg mt-2 font-bold">
             Loading exercises...
           </Text>
