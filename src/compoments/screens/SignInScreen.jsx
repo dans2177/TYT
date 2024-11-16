@@ -1,4 +1,3 @@
-// SignInScreen.jsx
 import React, { useState, useEffect } from "react";
 import {
   View,
@@ -9,6 +8,8 @@ import {
   Platform,
   Modal,
   StyleSheet,
+  Keyboard,
+  TouchableWithoutFeedback,
 } from "react-native";
 import { useDispatch, useSelector } from "react-redux";
 import { signIn, setError } from "../../redux/slices/authSlice";
@@ -47,7 +48,6 @@ const SignInScreen = ({ navigation }) => {
         text1: "Sign In Successful",
         text2: `Welcome back, ${user.displayName || user.userEmail}!`,
       });
-      // Optionally navigate to another screen after successful sign-in
     }
   }, [error, user, dispatch]);
 
@@ -96,117 +96,124 @@ const SignInScreen = ({ navigation }) => {
     }
   };
 
+  const dismissKeyboard = () => {
+    Keyboard.dismiss();
+  };
+
   if (!fontsLoaded) {
     return null;
   }
 
   return (
-    <KeyboardAvoidingView
-      behavior={Platform.OS === "ios" ? "padding" : "height"}
-      style={styles.container}
-    >
-      {/* Glitch Header positioned absolutely at the top */}
-      <View style={styles.glitchContainer}>
-        <GlitchText text="Workout Planner" />
-      </View>
-
-      {/* Main Content centered vertically */}
-      <View style={styles.contentContainer}>
-        {/* Sign In Title */}
-        <Text style={styles.title}>Sign In</Text>
-
-        {/* Input Fields */}
-        <View style={styles.inputContainer}>
-          <TextInput
-            placeholder="Email"
-            value={email}
-            onChangeText={setEmail}
-            keyboardType="email-address"
-            autoCapitalize="none"
-            placeholderTextColor="#888"
-            style={styles.input}
-          />
-          <TextInput
-            placeholder="Password"
-            value={password}
-            onChangeText={setPassword}
-            secureTextEntry
-            placeholderTextColor="#888"
-            style={styles.input}
-          />
+    <TouchableWithoutFeedback onPress={dismissKeyboard}>
+      <KeyboardAvoidingView
+        behavior={Platform.OS === "ios" ? "padding" : "height"}
+        keyboardVerticalOffset={Platform.OS === "android" ? -100 : 0}
+        style={styles.container}
+      >
+        {/* Glitch Header positioned absolutely at the top */}
+        <View style={styles.glitchContainer}>
+          <GlitchText text="Workout Planner" />
         </View>
 
-        {/* Sign In Button */}
-        <TouchableOpacity
-          style={[styles.button, loading && { opacity: 0.5 }]}
-          onPress={handleSignIn}
-          disabled={loading}
-        >
-          <Text style={styles.buttonText}>
-            {loading ? "Signing In..." : "Sign In"}
-          </Text>
-        </TouchableOpacity>
+        {/* Main Content centered vertically */}
+        <View style={styles.contentContainer}>
+          {/* Sign In Title */}
+          <Text style={styles.title}>Sign In</Text>
 
-        {/* Forgot Password Link */}
-        <TouchableOpacity
-          onPress={handleForgotPassword}
-          style={styles.forgotPassword}
-        >
-          <Text style={styles.forgotPasswordText}>Forgot Password?</Text>
-        </TouchableOpacity>
-
-        {/* Register Link */}
-        <TouchableOpacity
-          onPress={() => navigation.navigate("Register")}
-          style={styles.registerLink}
-        >
-          <View style={styles.registerIcon}>
-            <Icon name="person-add-outline" size={16} color="#fff" />
-          </View>
-          <Text style={styles.registerText}>Register</Text>
-        </TouchableOpacity>
-      </View>
-
-      {/* Forgot Password Modal */}
-      <Modal
-        animationType="slide"
-        transparent={true}
-        visible={isForgotPasswordVisible}
-        onRequestClose={() => {
-          setForgotPasswordVisible(false);
-        }}
-      >
-        <View style={styles.modalOverlay}>
-          <View style={styles.modalContainer}>
-            <Text style={styles.modalTitle}>Reset Password</Text>
+          {/* Input Fields */}
+          <View style={styles.inputContainer}>
             <TextInput
-              placeholder="Enter your email"
-              value={resetEmail}
-              onChangeText={setResetEmail}
+              placeholder="Email"
+              value={email}
+              onChangeText={setEmail}
               keyboardType="email-address"
               autoCapitalize="none"
               placeholderTextColor="#888"
-              style={styles.modalInput}
+              style={styles.input}
             />
-            <TouchableOpacity
-              style={styles.modalButton}
-              onPress={handlePasswordReset}
-            >
-              <Text style={styles.modalButtonText}>Send Reset Link</Text>
-            </TouchableOpacity>
-            <TouchableOpacity
-              style={styles.modalCancelButton}
-              onPress={() => setForgotPasswordVisible(false)}
-            >
-              <Text style={styles.modalButtonText}>Cancel</Text>
-            </TouchableOpacity>
+            <TextInput
+              placeholder="Password"
+              value={password}
+              onChangeText={setPassword}
+              secureTextEntry
+              placeholderTextColor="#888"
+              style={styles.input}
+            />
           </View>
-        </View>
-      </Modal>
 
-      {/* Toast Messages */}
-      <Toast />
-    </KeyboardAvoidingView>
+          {/* Sign In Button */}
+          <TouchableOpacity
+            style={[styles.button, loading && { opacity: 0.5 }]}
+            onPress={handleSignIn}
+            disabled={loading}
+          >
+            <Text style={styles.buttonText}>
+              {loading ? "Signing In..." : "Sign In"}
+            </Text>
+          </TouchableOpacity>
+
+          {/* Forgot Password Link */}
+          <TouchableOpacity
+            onPress={handleForgotPassword}
+            style={styles.forgotPassword}
+          >
+            <Text style={styles.forgotPasswordText}>Forgot Password?</Text>
+          </TouchableOpacity>
+
+          {/* Register Link */}
+          <TouchableOpacity
+            onPress={() => navigation.navigate("Register")}
+            style={styles.registerLink}
+          >
+            <View style={styles.registerIcon}>
+              <Icon name="person-add-outline" size={16} color="#fff" />
+            </View>
+            <Text style={styles.registerText}>Register</Text>
+          </TouchableOpacity>
+        </View>
+
+        {/* Forgot Password Modal */}
+        <Modal
+          animationType="slide"
+          transparent={true}
+          visible={isForgotPasswordVisible}
+          onRequestClose={() => {
+            setForgotPasswordVisible(false);
+          }}
+        >
+          <View style={styles.modalOverlay}>
+            <View style={styles.modalContainer}>
+              <Text style={styles.modalTitle}>Reset Password</Text>
+              <TextInput
+                placeholder="Enter your email"
+                value={resetEmail}
+                onChangeText={setResetEmail}
+                keyboardType="email-address"
+                autoCapitalize="none"
+                placeholderTextColor="#888"
+                style={styles.modalInput}
+              />
+              <TouchableOpacity
+                style={styles.modalButton}
+                onPress={handlePasswordReset}
+              >
+                <Text style={styles.modalButtonText}>Send Reset Link</Text>
+              </TouchableOpacity>
+              <TouchableOpacity
+                style={styles.modalCancelButton}
+                onPress={() => setForgotPasswordVisible(false)}
+              >
+                <Text style={styles.modalButtonText}>Cancel</Text>
+              </TouchableOpacity>
+            </View>
+          </View>
+        </Modal>
+
+        {/* Toast Messages */}
+        <Toast />
+      </KeyboardAvoidingView>
+    </TouchableWithoutFeedback>
   );
 };
 
@@ -221,14 +228,14 @@ const styles = StyleSheet.create({
     left: 0,
     right: 0,
     alignItems: "center",
-    paddingTop: Platform.OS === "android" ? 40 : 60, // Adjust for status bar height
+    paddingTop: Platform.OS === "android" ? 40 : 60,
     zIndex: 1,
   },
   contentContainer: {
     flex: 1,
     justifyContent: "center",
     paddingHorizontal: 24,
-    marginTop: Platform.OS === "android" ? 80 : 100, // Prevent overlap with GlitchText
+    marginTop: Platform.OS === "android" ? 80 : 100,
   },
   title: {
     fontSize: 24,
@@ -247,7 +254,6 @@ const styles = StyleSheet.create({
     marginBottom: 12,
     backgroundColor: "#333",
     color: "#fff",
-    fontFamily: "PressStart2P-Regular",
   },
   button: {
     backgroundColor: "#ff6600",
@@ -258,7 +264,6 @@ const styles = StyleSheet.create({
   },
   buttonText: {
     color: "#fff",
-    fontFamily: "PressStart2P-Regular",
     fontSize: 16,
   },
   forgotPassword: {
@@ -267,7 +272,6 @@ const styles = StyleSheet.create({
   },
   forgotPasswordText: {
     color: "#ff6600",
-    fontFamily: "PressStart2P-Regular",
   },
   registerLink: {
     flexDirection: "row",
@@ -283,7 +287,6 @@ const styles = StyleSheet.create({
   },
   registerText: {
     color: "#ff6600",
-    fontFamily: "PressStart2P-Regular",
     fontSize: 16,
   },
   modalOverlay: {
@@ -311,7 +314,6 @@ const styles = StyleSheet.create({
     paddingHorizontal: 12,
     backgroundColor: "#333",
     color: "#fff",
-    fontFamily: "PressStart2P-Regular",
     marginBottom: 16,
   },
   modalButton: {
@@ -329,7 +331,6 @@ const styles = StyleSheet.create({
   },
   modalButtonText: {
     color: "#fff",
-    fontFamily: "PressStart2P-Regular",
     fontSize: 16,
   },
 });

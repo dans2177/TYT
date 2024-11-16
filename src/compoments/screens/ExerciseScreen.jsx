@@ -13,7 +13,6 @@ import {
   Platform,
   Alert,
   ActivityIndicator,
-  Keyboard,
   TouchableWithoutFeedback,
   ScrollView,
 } from "react-native";
@@ -25,9 +24,11 @@ import {
   addExerciseToFirestore,
   updateExerciseInFirestore,
   deleteExerciseFromFirestore,
+  deleteAllExercisesFromFirestore,
 } from "../../redux/slices/exerciseSlice";
 import { Ionicons } from "@expo/vector-icons";
-import { defaultExercises } from "../utils/ExerciseDefaults"; // Ensure this import is correct
+import { defaultExercises } from "../utils/ExerciseDefaults";
+import { SafeAreaView } from "react-native-safe-area-context";
 
 const { width, height } = Dimensions.get("window");
 
@@ -62,9 +63,9 @@ const muscleGroupCategories = {
   Shoulders: "Shoulders",
   Biceps: "Arms",
   Triceps: "Arms",
+  Forearms: "Arms",
   Abs: "Core",
   Obliques: "Core",
-  Forearms: "Forearms",
 };
 
 const ExerciseScreen = () => {
@@ -74,8 +75,14 @@ const ExerciseScreen = () => {
   const exercisesFromState = useSelector(
     (state) => state.exercises?.data || []
   );
-  const status = useSelector((state) => state.exercises.status);
-  const errorMessage = useSelector((state) => state.exercises.error);
+  const status = useSelector((state) => state.exercises.fetchStatus);
+  const errorMessage = useSelector((state) => state.exercises.fetchError);
+
+  // Additional selectors for delete all status and error
+  const deleteAllStatus = useSelector(
+    (state) => state.exercises.deleteAllStatus
+  );
+  const deleteAllError = useSelector((state) => state.exercises.deleteAllError);
 
   const [modalVisible, setModalVisible] = useState(false);
   const [isEditing, setIsEditing] = useState(false);
@@ -187,6 +194,29 @@ const ExerciseScreen = () => {
     );
   };
 
+  const confirmDeleteAll = () => {
+    Alert.alert(
+      "Delete All Exercises",
+      "Are you sure you want to delete all exercises? This action cannot be undone.",
+      [
+        {
+          text: "Cancel",
+          style: "cancel",
+        },
+        {
+          text: "Delete All",
+          onPress: () => handleDeleteAllExercises(),
+          style: "destructive",
+        },
+      ],
+      { cancelable: true }
+    );
+  };
+
+  const handleDeleteAllExercises = () => {
+    dispatch(deleteAllExercisesFromFirestore());
+  };
+
   // Data migration for existing exercises
   const transformedExercises = useMemo(() => {
     return exercisesFromState.map((exercise) => {
@@ -214,7 +244,7 @@ const ExerciseScreen = () => {
     );
   }, [searchQuery, transformedExercises]);
 
-  // Group exercises under broader categories
+  // Group exercises under all relevant broader categories
   const groupedExercises = useMemo(() => {
     const groups = {};
 
@@ -228,20 +258,21 @@ const ExerciseScreen = () => {
         categories.add(category);
       });
 
-      let groupKey = "";
-
-      if (categories.size === 1) {
-        groupKey = Array.from(categories)[0];
-      } else if (categories.size > 1) {
-        groupKey = "Compound Exercises";
-      } else {
-        groupKey = "Other";
+      if (categories.size === 0) {
+        // If no categories mapped, place under "Other"
+        if (!groups["Other"]) {
+          groups["Other"] = [];
+        }
+        groups["Other"].push(exercise);
+        return;
       }
 
-      if (!groups[groupKey]) {
-        groups[groupKey] = [];
-      }
-      groups[groupKey].push(exercise);
+      categories.forEach((category) => {
+        if (!groups[category]) {
+          groups[category] = [];
+        }
+        groups[category].push(exercise);
+      });
     });
 
     return groups;
@@ -294,40 +325,75 @@ const ExerciseScreen = () => {
     closeModal();
   };
 
+  // Optional: Define a preferred order for categories
+  const categoryOrder = [
+    "Legs",
+    "Chest",
+    "Back",
+    "Shoulders",
+    "Arms",
+    "Core",
+    "Other",
+  ];
+
+  // Sort groupedExercises based on categoryOrder
+  const sortedGroupedExercises = useMemo(() => {
+    const sortedGroups = {};
+    categoryOrder.forEach((category) => {
+      if (groupedExercises[category]) {
+        sortedGroups[category] = groupedExercises[category];
+      }
+    });
+    // Add any remaining categories not specified in categoryOrder
+    Object.keys(groupedExercises).forEach((category) => {
+      if (!sortedGroups[category]) {
+        sortedGroups[category] = groupedExercises[category];
+      }
+    });
+    return sortedGroups;
+  }, [groupedExercises]);
+
   return (
-    <View className="flex-1 bg-black">
-      {/* LinearGradient Background */}
-      <LinearGradient
-        colors={["#18181b", "#0d0d0d", "#0d0d0d", "#1a1a1a", "#00FF00"]}
-        start={{ x: 0.5, y: 0 }}
-        end={{ x: 0.5, y: 1 }}
-        className="absolute top-0 left-0 w-full h-full"
-      />
+    <SafeAreaView className="flex-1 bg-stone-800">
+=
 
       {/* Header */}
-      <View className="pt-16 w-full flex-row justify-between items-center px-4">
+      <View className="w-full flex-row justify-between items-center px-4">
         {/* Home Button with Emoji on the Left */}
         <TouchableOpacity
           onPress={() => navigation.navigate("Home")}
           accessibilityLabel="Home Button"
           accessibilityHint="Navigates to the Home screen"
         >
-          <Text className="text-white text-4xl">🏠</Text>
+          <Text className="text-white text-3xl">🏠</Text>
         </TouchableOpacity>
 
         {/* Centered Exercises Text */}
-        <Text className="text-white text-xl font-bold text-center">
+        <Text className="text-white text-4xl font-handjet text-center">
           Exercises
         </Text>
 
-        {/* Add Button with Emoji on the Right */}
-        <TouchableOpacity
-          onPress={() => openModal()}
-          accessibilityLabel="Add Exercise Button"
-          accessibilityHint="Opens the modal to add a new exercise"
-        >
-          <Text className="text-white text-4xl">➕</Text>
-        </TouchableOpacity>
+        {/* Right Side Buttons: Add and Delete All */}
+        <View className="flex-row">
+          {/* Add Button with Emoji */}
+          <TouchableOpacity
+            onPress={() => openModal()}
+            accessibilityLabel="Add Exercise Button"
+            accessibilityHint="Opens the modal to add a new exercise"
+            className="mr-4"
+          >
+            <Text className="text-white text-3xl">➕</Text>
+          </TouchableOpacity>
+
+          {/* Delete All Button with Emoji */}
+          <TouchableOpacity
+            onPress={confirmDeleteAll}
+            accessibilityLabel="Delete All Exercises Button"
+            accessibilityHint="Deletes all exercises after confirmation"
+          >
+            <Text className="text-white text-3xl">🗑️</Text>
+          </TouchableOpacity>
+        </View>
       </View>
 
       {/* Search Bar */}
@@ -353,26 +419,38 @@ const ExerciseScreen = () => {
       </View>
 
       {/* Loading Indicator */}
-      {status === "loading" && exercisesFromState.length === 0 && (
-        <View className="flex-1 justify-center items-center">
-          <ActivityIndicator size="20" color="#00FF00" />
-          <Text className="text-white text-lg mt-2 font-bold">
-            Loading exercises...
-          </Text>
-        </View>
-      )}
+      {(status === "loading" && exercisesFromState.length === 0) ||
+        (deleteAllStatus === "loading" && (
+          <View className="flex-1 justify-center items-center">
+            <ActivityIndicator size="20" color="#00FF00" />
+            <Text className="text-white text-lg mt-2 font-bold">
+              {deleteAllStatus === "loading"
+                ? "Deleting all exercises..."
+                : "Loading exercises..."}
+            </Text>
+          </View>
+        ))}
 
       {/* Error Message */}
-      {status === "failed" && (
+      {(status === "failed" || deleteAllStatus === "failed") && (
         <Text className="text-red-500 text-center m-4 text-md">
-          Error loading exercises: {errorMessage}
+          {status === "failed"
+            ? `Error loading exercises: ${errorMessage}`
+            : `Error deleting exercises: ${deleteAllError}`}
+        </Text>
+      )}
+
+      {/* Success Message for Delete All */}
+      {deleteAllStatus === "succeeded" && (
+        <Text className="text-green-500 text-center m-4 text-md">
+          All exercises have been deleted successfully.
         </Text>
       )}
 
       {/* Exercises List */}
-      {status !== "loading" && (
+      {status !== "loading" && deleteAllStatus !== "loading" && (
         <FlatList
-          data={Object.entries(groupedExercises)}
+          data={Object.entries(sortedGroupedExercises)}
           keyExtractor={([group]) => group}
           className="p-4 py-2"
           renderItem={({ item: [group, exercises] }) => (
@@ -428,7 +506,7 @@ const ExerciseScreen = () => {
 
       {/* Add/Edit Exercise Modal */}
       <Modal visible={modalVisible} transparent animationType="fade">
-        <TouchableWithoutFeedback onPress={handleModalClose}>
+        <TouchableWithoutFeedback onPress={closeModal}>
           <View className="flex-1 justify-center items-center bg-black bg-opacity-50">
             <TouchableWithoutFeedback onPress={() => {}}>
               <KeyboardAvoidingView
@@ -557,7 +635,7 @@ const ExerciseScreen = () => {
           </View>
         </TouchableWithoutFeedback>
       </Modal>
-    </View>
+    </SafeAreaView>
   );
 };
 

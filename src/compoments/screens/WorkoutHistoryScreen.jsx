@@ -13,7 +13,7 @@ import { loadExercises } from "../../redux/slices/exerciseSlice";
 import { useNavigation } from "@react-navigation/native";
 import Ionicons from "react-native-vector-icons/Ionicons";
 
-const WorkoutHistory = () => {
+const WorkoutHistoryScreen = () => {
   const dispatch = useDispatch();
   const navigation = useNavigation();
   const workoutsList = useSelector((state) => state.workout.workoutsList);
@@ -62,12 +62,10 @@ const WorkoutHistory = () => {
   };
 
   const renderExerciseItem = (exercise) => {
-    // Try to find the exercise info by matching IDs
     const exerciseInfo = exercisesList.find(
       (ex) => ex.id === exercise.exerciseId
     );
 
-    // If not found, check if exercise name is directly available
     const exerciseName = exerciseInfo
       ? exerciseInfo.title
       : exercise.name || "Unknown Exercise";
@@ -95,7 +93,6 @@ const WorkoutHistory = () => {
     const isLoadingExercises = loadingExercises[item.id];
     const exerciseError = exerciseErrors[item.id];
 
-    // New variables for stretch and cardio
     const stretch = item.stretch ? "Yes" : "No";
     const cardio = item.cardio ? "Yes" : "No";
     const cardioType = item.cardioType || "N/A";
@@ -103,7 +100,7 @@ const WorkoutHistory = () => {
       item.cardioLength !== undefined ? item.cardioLength : "N/A";
 
     return (
-      <View className="rounded-3xl w-full mb-4 shadow-sm bg-black shadow-slate-900">
+      <SafeAreaView className="rounded-3xl w-full mb-4 shadow-sm bg-black shadow-slate-900">
         <TouchableOpacity
           onPress={() => {
             toggleExpand(item.id);
@@ -123,7 +120,6 @@ const WorkoutHistory = () => {
         </TouchableOpacity>
         {isExpanded && (
           <View className="p-4">
-            {/* Display stretch and cardio details */}
             <Text className="text-white text-base">Workout Details:</Text>
             <Text className="text-gray-400 text-sm">Stretch: {stretch}</Text>
             <Text className="text-gray-400 text-sm">Cardio: {cardio}</Text>
@@ -137,8 +133,6 @@ const WorkoutHistory = () => {
                 </Text>
               </>
             )}
-
-            {/* Existing code to display exercises */}
             {isLoadingExercises && (
               <Text className="text-white">Loading exercises...</Text>
             )}
@@ -168,21 +162,20 @@ const WorkoutHistory = () => {
               )}
           </View>
         )}
-      </View>
+      </SafeAreaView>
     );
   };
 
   return (
-    <SafeAreaView className="flex-1 bg-zinc-800">
+    <SafeAreaView className="flex-1 bg-zinc-800 pt-10">
       <View className="flex-row items-center justify-between px-4 py-2">
+        <Text className="text-4xl text-white font-handjet">
+          Workout History
+        </Text>
         <TouchableOpacity onPress={() => navigation.navigate("Home")}>
-          <Ionicons name="home-outline" size={24} color="white" />
+          <Text className="text-white text-2xl">🏠</Text>
         </TouchableOpacity>
-        <Text className="text-white text-xl">Workout History</Text>
-        {/* Placeholder for alignment */}
-        <View style={{ width: 24 }} />
       </View>
-
       {fetchAllStatus === "loading" && (
         <Text className="text-white text-center mt-4">Loading...</Text>
       )}
@@ -193,7 +186,9 @@ const WorkoutHistory = () => {
       )}
       {fetchAllStatus === "succeeded" && (
         <FlatList
-          data={workoutsList}
+          data={[...workoutsList].sort(
+            (a, b) => new Date(b.date) - new Date(a.date)
+          )}
           keyExtractor={(item) => item.id}
           renderItem={renderItem}
           contentContainerStyle={{ padding: 16, paddingTop: 8 }}
@@ -203,4 +198,4 @@ const WorkoutHistory = () => {
   );
 };
 
-export default WorkoutHistory;
+export default WorkoutHistoryScreen;

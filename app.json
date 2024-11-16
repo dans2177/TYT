@@ -2,6 +2,7 @@
   "expo": {
     "name": "Workout App - Dont Develop",
     "slug": "my-app",
+    "icon": "./src/assets/logo.png",
     "version": "1.0.0",
     "orientation": "portrait",
     "userInterfaceStyle": "light",
@@ -12,6 +13,8 @@
     "ios": {
       "supportsTablet": true,
       "bundleIdentifier": "com.si.workout"
+      
+      
     },
     "android": {
       "adaptiveIcon": {

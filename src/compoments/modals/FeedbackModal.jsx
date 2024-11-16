@@ -1,4 +1,3 @@
-// FeedbackModal.js
 import React, { useState } from "react";
 import {
   View,
@@ -8,15 +7,18 @@ import {
   TextInput,
   ActivityIndicator,
   Alert,
-  Platform, // Import Platform for any platform-specific logic
+  KeyboardAvoidingView,
+  Platform,
+  Keyboard,
+  TouchableWithoutFeedback,
+  ScrollView,
 } from "react-native";
-import { auth } from "../../api/firebase"; // Ensure this path is correct
+import { auth } from "../../api/firebase";
 
 const FeedbackModal = ({ visible, onClose }) => {
   const [message, setMessage] = useState("");
   const [submitting, setSubmitting] = useState(false);
 
-  // Get the current user's email from Firebase Auth
   const currentUser = auth.currentUser;
   const userEmail = currentUser ? currentUser.email : "";
 
@@ -36,7 +38,7 @@ const FeedbackModal = ({ visible, onClose }) => {
           Accept: "application/json",
         },
         body: JSON.stringify({
-          email: userEmail, // Email is included in the submission
+          email: userEmail,
           message: message,
         }),
       });
@@ -69,45 +71,65 @@ const FeedbackModal = ({ visible, onClose }) => {
         }
       }}
     >
-      <View className="flex-1 justify-center items-center bg-black bg-opacity-50">
-        <View className="bg-white rounded-lg w-4/5 p-6 shadow-lg">
-          <Text className="text-2xl font-bold mb-4 text-center">Feedback</Text>
-
-          <Text className="text-sm text-gray-700 mb-2">Your Feedback</Text>
-          <TextInput
-            multiline
-            value={message}
-            onChangeText={setMessage}
-            placeholder="Enter your feedback here..."
-            className="border border-gray-300 rounded-md p-3 mb-4 text-gray-800 h-40 min-h-40"
-            editable={!submitting}
-            textAlignVertical="top" // Ensures text starts at the top on Android
-            accessibilityLabel="Feedback Input"
-            accessibilityHint="Enter your feedback here"
-          />
-
-          {submitting ? (
-            <ActivityIndicator size={50} color="#6B21A8" />
-          ) : (
-            <View className="flex-row justify-center items-center">
-              <TouchableOpacity
-                onPress={onClose}
-                className="mr-4"
-                disabled={submitting}
+      <TouchableWithoutFeedback onPress={Keyboard.dismiss}>
+        <View className="flex-1 justify-center items-center bg-black bg-opacity-80">
+          <TouchableWithoutFeedback>
+            <KeyboardAvoidingView
+              behavior={Platform.OS === "ios" ? "padding" : undefined}
+              className="bg-[#1e1e1e] rounded-lg w-5/6 p-4"
+            >
+              <ScrollView
+                contentContainerStyle={{
+                  flexGrow: 1,
+                  justifyContent: "center",
+                }}
               >
-                <Text className="text-red-500 text-lg">Cancel</Text>
-              </TouchableOpacity>
-              <TouchableOpacity
-                onPress={handleSubmit}
-                className="bg-purple-600 px-6 py-2 rounded-md"
-                disabled={submitting}
-              >
-                <Text className="text-white text-lg">Submit</Text>
-              </TouchableOpacity>
-            </View>
-          )}
+                <Text className="text-2xl text-center text-white font-bold mb-4">
+                  Feedback
+                </Text>
+
+                <Text className="text-sm text-gray-400 mb-2">
+                  We value your thoughts! Please share your feedback below.
+                </Text>
+
+                <TextInput
+                  multiline
+                  value={message}
+                  onChangeText={setMessage}
+                  placeholder="Enter your feedback here..."
+                  placeholderTextColor="#888"
+                  className="border border-gray-600 bg-[#2a2a2a] rounded-md p-3 text-white h-40"
+                  editable={!submitting}
+                  textAlignVertical="top"
+                  accessibilityLabel="Feedback Input"
+                  accessibilityHint="Enter your feedback here"
+                />
+
+                {submitting ? (
+                  <ActivityIndicator size="large" color="#F97316" />
+                ) : (
+                  <View className="flex-row justify-center my-4">
+                    <TouchableOpacity
+                      onPress={onClose}
+                      className="mr-4 border border-red-500 rounded-md px-4 py-2"
+                      disabled={submitting}
+                    >
+                      <Text className="text-red-400 text-lg">Cancel</Text>
+                    </TouchableOpacity>
+                    <TouchableOpacity
+                      onPress={handleSubmit}
+                      className="bg-orange-600 px-6 py-2 rounded-md"
+                      disabled={submitting}
+                    >
+                      <Text className="text-white text-lg">Submit</Text>
+                    </TouchableOpacity>
+                  </View>
+                )}
+              </ScrollView>
+            </KeyboardAvoidingView>
+          </TouchableWithoutFeedback>
         </View>
-      </View>
+      </TouchableWithoutFeedback>
     </Modal>
   );
 };

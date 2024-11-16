@@ -13,9 +13,11 @@ const HomeScreen = () => {
   return (
     <View className="flex-1 bg-zinc-800">
       {/* Top Banner */}
-      <View className="flex-row justify-between items-center mt-12 mb-4 px-6 pt-4">
+      <View className="flex-row justify-between items-center mt-12 mb-4 px-6">
         {/* Left Icon */}
-        <TouchableOpacity onPress={() => navigation.navigate("WorkoutHistory")}>
+        <TouchableOpacity
+          onPress={() => navigation.navigate("WorkoutHistoryScreen")}
+        >
           <Text className="text-3xl">💪</Text>
         </TouchableOpacity>
 

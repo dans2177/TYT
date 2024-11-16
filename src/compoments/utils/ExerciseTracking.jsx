@@ -273,22 +273,26 @@ const ExerciseTracking = ({
     );
   };
 
-  const renderFooter = () => (
-    <>
-      <TouchableOpacity
-        onPress={() => setShowExerciseListModal(true)}
-        className="p-4 bg-blue-500 rounded-lg m-4"
-      >
-        <Text className="text-white text-center text-lg">Add Exercise</Text>
-      </TouchableOpacity>
-      <TouchableOpacity
-        onPress={() => setShowEndWorkoutModal(true)}
-        className="p-4 bg-red-500 rounded-lg m-4"
-      >
-        <Text className="text-white text-center text-lg">End Workout</Text>
-      </TouchableOpacity>
-    </>
-  );
+const renderFooter = () => (
+  <View className="flex-row justify-center items-center space-x-4">
+    <TouchableOpacity
+      onPress={() => setShowExerciseListModal(true)}
+      className="flex-1 bg-blue-900 p-4 rounded-full shadow-md"
+    >
+      <Text className="text-white text-center text-lg font-semibold">
+        ➕ Add Exercise
+      </Text>
+    </TouchableOpacity>
+    <TouchableOpacity
+      onPress={() => setShowEndWorkoutModal(true)}
+      className="flex-1 bg-red-900 p-4 rounded-full shadow-md"
+    >
+      <Text className="text-white text-center text-lg font-semibold">
+        🛑 End Workout
+      </Text>
+    </TouchableOpacity>
+  </View>
+);
 
   return (
     <>

@@ -8,6 +8,7 @@ import {
   setDoc,
   deleteDoc,
   doc,
+  writeBatch,
 } from "firebase/firestore";
 import { auth, db } from "../../api/firebase"; // Import Firestore and Auth instances
 
@@ -100,6 +101,35 @@ export const deleteExerciseFromFirestore = createAsyncThunk(
   }
 );
 
+// New Async thunk for deleting all exercises from Firestore
+export const deleteAllExercisesFromFirestore = createAsyncThunk(
+  "exercises/deleteAllExercisesFromFirestore",
+  async (_, { rejectWithValue }) => {
+    try {
+      const user = auth.currentUser;
+      if (!user) throw new Error("No user authenticated");
+
+      const userId = user.uid;
+      const exercisesRef = collection(db, "users", userId, "exercises");
+
+      // Fetch all exercise documents
+      const querySnapshot = await getDocs(exercisesRef);
+      const batch = writeBatch(db);
+
+      querySnapshot.forEach((docSnap) => {
+        batch.delete(doc(db, "users", userId, "exercises", docSnap.id));
+      });
+
+      // Commit the batch
+      await batch.commit();
+
+      return;
+    } catch (error) {
+      return rejectWithValue(error.message);
+    }
+  }
+);
+
 // Initial state for the slice
 const initialState = {
   data: [],
@@ -111,6 +141,8 @@ const initialState = {
   updateError: null,
   deleteStatus: "idle",
   deleteError: null,
+  deleteAllStatus: "idle", // 'idle' | 'loading' | 'succeeded' | 'failed'
+  deleteAllError: null,
 };
 
 // Create the slice
@@ -183,6 +215,20 @@ const exercisesSlice = createSlice({
       .addCase(deleteExerciseFromFirestore.rejected, (state, action) => {
         state.deleteStatus = "failed";
         state.deleteError = action.payload;
+      })
+
+      // Delete All Exercises
+      .addCase(deleteAllExercisesFromFirestore.pending, (state) => {
+        state.deleteAllStatus = "loading";
+        state.deleteAllError = null;
+      })
+      .addCase(deleteAllExercisesFromFirestore.fulfilled, (state) => {
+        state.deleteAllStatus = "succeeded";
+        state.data = [];
+      })
+      .addCase(deleteAllExercisesFromFirestore.rejected, (state, action) => {
+        state.deleteAllStatus = "failed";
+        state.deleteAllError = action.payload;
       });
   },
 });

@@ -1,6 +1,6 @@
 // src/screens/WorkoutScreen.js
 
-import React, { useEffect, useState } from "react";
+import React, { useEffect, useState, useRef } from "react";
 import { View, Text, TouchableOpacity, SafeAreaView } from "react-native";
 import { useSelector, useDispatch } from "react-redux";
 import { loadMuscleTags } from "../../redux/slices/muscleTagsSlice";
@@ -20,6 +20,7 @@ const WorkoutScreen = () => {
   const [rating, setRating] = useState(0);
   const [notes, setNotes] = useState("");
   const [isAnimationFinished, setIsAnimationFinished] = useState(false);
+  const animationRef = useRef(null); // Animation reference
 
   // Load muscle tags and workout data on component mount
   useEffect(() => {
@@ -74,9 +75,7 @@ const WorkoutScreen = () => {
       nextWorkoutDay = 1;
     }
 
-    // Dispatch updateProfile to update the user's workoutDay
     dispatch(updateProfile({ workoutDay: nextWorkoutDay }));
-
     setIsFinished(true);
     setIsAnimationFinished(false);
   };
@@ -88,7 +87,6 @@ const WorkoutScreen = () => {
         ...workoutData,
         isFinished: false,
         isRated: false,
-        // Do not reset rating and notes
       })
     );
 
@@ -98,22 +96,24 @@ const WorkoutScreen = () => {
       prevWorkoutDay = totalDays;
     }
 
-    // Dispatch updateProfile to update the user's workoutDay
     dispatch(updateProfile({ workoutDay: prevWorkoutDay }));
-
     setIsFinished(false);
     setIsAnimationFinished(false);
   };
 
-  // Import the confetti animation JSON file using require
+  const handleAnimationFinish = () => {
+    if (animationRef.current) {
+      animationRef.current.reset(); // Reset the animation
+    }
+    setIsAnimationFinished(true);
+  };
+
   const ConfettiAnimation = require("../../assets/lottie/lofi.json");
 
-  // Render when workout hasn't started
   if (!workoutData || !workoutData.isStarted) {
     return (
       <SafeAreaView className="flex-1">
         <View className="justify-center items-center mt-44">
-          {/* Play Button */}
           <TouchableOpacity
             className="bg-lime-500 pl-4 h-60 w-60 rounded-full justify-center items-center"
             onPress={handleStartWorkout}
@@ -121,13 +121,10 @@ const WorkoutScreen = () => {
             <Ionicons name="play" size={150} color="gray" />
           </TouchableOpacity>
         </View>
-
-        {/* Bottom Section: Title and Tags */}
         <View className="absolute bottom-5 left-0 right-0 items-center">
           <Text className="text-2xl text-white my-5 font-bold">
             Today's Muscle Groups:
           </Text>
-
           <View className="flex-row flex-wrap justify-center items-center mb-10 w-11/12">
             {muscleTags &&
             Array.isArray(muscleTags[workoutDay]) &&
@@ -151,7 +148,6 @@ const WorkoutScreen = () => {
     );
   }
 
-  // Render when workout is finished
   if (isFinished) {
     return (
       <SafeAreaView style={{ flex: 1 }}>
@@ -163,23 +159,19 @@ const WorkoutScreen = () => {
             position: "relative",
           }}
         >
-          {/* Other Content */}
           <Text className="text-4xl text-white mb-4 font-bold text-center">
             Great Job!
           </Text>
           <Text className="text-lg text-white mb-8 text-center px-4">
             You've completed today's workout.
           </Text>
-
           <TouchableOpacity
             onPress={undoFinishWorkout}
-            className=" absolute bottom-10 p-4 bg-white rounded-full"
-            style={{ elevation: 5 }}
+            className="absolute bottom-10 p-4 bg-white rounded-full"
+            style={{ elevation: 5, zIndex: 2 }}
           >
             <Ionicons name="arrow-back" size={24} color="#3b5998" />
           </TouchableOpacity>
-
-          {/* Lottie Animation */}
           {!isAnimationFinished && (
             <View
               style={{
@@ -192,11 +184,12 @@ const WorkoutScreen = () => {
               }}
             >
               <LottieView
+                ref={animationRef}
                 source={ConfettiAnimation}
                 autoPlay
                 loop={false}
                 style={{ width: "100%", height: "100%" }}
-                onAnimationFinish={() => setIsAnimationFinished(true)}
+                onAnimationFinish={handleAnimationFinish}
               />
             </View>
           )}
@@ -205,7 +198,6 @@ const WorkoutScreen = () => {
     );
   }
 
-  // Render the ExerciseTracking component when workout is in progress
   return (
     <SafeAreaView className="flex-1">
       <ExerciseTracking

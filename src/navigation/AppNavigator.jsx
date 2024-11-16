@@ -7,7 +7,7 @@ import IntroModal from "../compoments/modals/IntroModal";
 import HomeScreen from "../compoments/screens/HomeScreen";
 import ExerciseScreen from "../compoments/screens/ExerciseScreen";
 import SettingsScreen from "../compoments/screens/SettingsScreen";
-import WorkoutHistory from "../compoments/screens/WorkoutHistory";
+import WorkoutHistoryScreen from "../compoments/screens/WorkoutHistoryScreen";
 import LoadingScreen from "../compoments/screens/LoadingScreen";
 
 const Stack = createStackNavigator();
@@ -103,8 +103,8 @@ const AppNavigator = ({ user }) => {
             }}
           />
           <Stack.Screen
-            name="WorkoutHistory"
-            component={WorkoutHistory}
+            name="WorkoutHistoryScreen"
+            component={WorkoutHistoryScreen}
             options={{
               headerShown: false,
               cardStyleInterpolator: ({ current, layouts }) => {

@@ -12,8 +12,8 @@ export const defaultExercises = [
     notes: "",
   },
   {
-    title: "Incline Bench Press",
-    muscleTags: ["Chest", "Shoulders", "Triceps"],
+    title: "Incline Dumbbell Press",
+    muscleTags: ["Chest", "Shoulders"],
     lastUsed: "20/10/24",
     max: 0,
     lastUsedWeight: 0,
@@ -21,25 +21,7 @@ export const defaultExercises = [
     notes: "",
   },
   {
-    title: "Dumbbell Flyes",
-    muscleTags: ["Chest"],
-    lastUsed: "20/10/24",
-    max: 0,
-    lastUsedWeight: 0,
-    lastUsedReps: 0,
-    notes: "",
-  },
-  {
-    title: "Push-Ups",
-    muscleTags: ["Chest", "Triceps", "Shoulders"],
-    lastUsed: "20/10/24",
-    max: 0,
-    lastUsedWeight: 0,
-    lastUsedReps: 0,
-    notes: "",
-  },
-  {
-    title: "Cable Crossovers",
+    title: "Chest Flyes",
     muscleTags: ["Chest"],
     lastUsed: "20/10/24",
     max: 0,
@@ -50,8 +32,8 @@ export const defaultExercises = [
 
   // Back Exercises
   {
-    title: "Pull-Ups",
-    muscleTags: ["Lats", "Biceps"],
+    title: "Deadlift",
+    muscleTags: ["Back", "Hamstrings", "Glutes"],
     lastUsed: "20/10/24",
     max: 0,
     lastUsedWeight: 0,
@@ -59,8 +41,8 @@ export const defaultExercises = [
     notes: "",
   },
   {
-    title: "Lat Pulldowns",
-    muscleTags: ["Lats", "Biceps"],
+    title: "Pull-Ups",
+    muscleTags: ["Back", "Biceps"],
     lastUsed: "20/10/24",
     max: 0,
     lastUsedWeight: 0,
@@ -69,16 +51,7 @@ export const defaultExercises = [
   },
   {
     title: "Bent-Over Rows",
-    muscleTags: ["Lats", "Biceps", "Lower Back"],
-    lastUsed: "20/10/24",
-    max: 0,
-    lastUsedWeight: 0,
-    lastUsedReps: 0,
-    notes: "",
-  },
-  {
-    title: "Seated Cable Rows",
-    muscleTags: ["Lats", "Biceps"],
+    muscleTags: ["Back", "Biceps"],
     lastUsed: "20/10/24",
     max: 0,
     lastUsedWeight: 0,
@@ -86,9 +59,9 @@ export const defaultExercises = [
     notes: "",
   },
 
-  // Shoulder Exercises
+  // Shoulders Exercises
   {
-    title: "Military Press",
+    title: "Overhead Press",
     muscleTags: ["Shoulders", "Triceps"],
     lastUsed: "20/10/24",
     max: 0,
@@ -97,7 +70,7 @@ export const defaultExercises = [
     notes: "",
   },
   {
-    title: "Dumbbell Lateral Raises",
+    title: "Lateral Raises",
     muscleTags: ["Shoulders"],
     lastUsed: "20/10/24",
     max: 0,
@@ -114,17 +87,8 @@ export const defaultExercises = [
     lastUsedReps: 0,
     notes: "",
   },
-  {
-    title: "Rear Delt Flyes",
-    muscleTags: ["Shoulders"],
-    lastUsed: "20/10/24",
-    max: 0,
-    lastUsedWeight: 0,
-    lastUsedReps: 0,
-    notes: "",
-  },
 
-  // Bicep Exercises
+  // Biceps Exercises
   {
     title: "Barbell Curls",
     muscleTags: ["Biceps"],
@@ -135,7 +99,7 @@ export const defaultExercises = [
     notes: "",
   },
   {
-    title: "Hammer Curls",
+    title: "Dumbbell Hammer Curls",
     muscleTags: ["Biceps", "Forearms"],
     lastUsed: "20/10/24",
     max: 0,
@@ -144,7 +108,7 @@ export const defaultExercises = [
     notes: "",
   },
   {
-    title: "Concentration Curls",
+    title: "Preacher Curls",
     muscleTags: ["Biceps"],
     lastUsed: "20/10/24",
     max: 0,
@@ -153,7 +117,7 @@ export const defaultExercises = [
     notes: "",
   },
 
-  // Tricep Exercises
+  // Triceps Exercises
   {
     title: "Tricep Pushdowns",
     muscleTags: ["Triceps"],
@@ -173,8 +137,8 @@ export const defaultExercises = [
     notes: "",
   },
   {
-    title: "Close Grip Bench Press",
-    muscleTags: ["Triceps", "Chest"],
+    title: "Overhead Tricep Extension",
+    muscleTags: ["Triceps"],
     lastUsed: "20/10/24",
     max: 0,
     lastUsedWeight: 0,
@@ -182,9 +146,9 @@ export const defaultExercises = [
     notes: "",
   },
 
-  // Leg Exercises (Quads and Hamstrings)
+  // Quadriceps Exercises
   {
-    title: "Squat",
+    title: "Squats",
     muscleTags: ["Quads", "Glutes", "Hamstrings"],
     lastUsed: "20/10/24",
     max: 0,
@@ -210,9 +174,29 @@ export const defaultExercises = [
     lastUsedReps: 0,
     notes: "",
   },
+
+  // Hamstrings Exercises
   {
     title: "Romanian Deadlifts",
-    muscleTags: ["Hamstrings", "Glutes", "Lower Back"],
+    muscleTags: ["Hamstrings", "Glutes"],
+    lastUsed: "20/10/24",
+    max: 0,
+    lastUsedWeight: 0,
+    lastUsedReps: 0,
+    notes: "",
+  },
+  {
+    title: "Leg Curls",
+    muscleTags: ["Hamstrings"],
+    lastUsed: "20/10/24",
+    max: 0,
+    lastUsedWeight: 0,
+    lastUsedReps: 0,
+    notes: "",
+  },
+  {
+    title: "Good Mornings",
+    muscleTags: ["Hamstrings", "Lower Back"],
     lastUsed: "20/10/24",
     max: 0,
     lastUsedWeight: 0,
@@ -220,7 +204,36 @@ export const defaultExercises = [
     notes: "",
   },
 
-  // Calf Exercises
+  // Glutes Exercises
+  {
+    title: "Hip Thrusts",
+    muscleTags: ["Glutes", "Hamstrings"],
+    lastUsed: "20/10/24",
+    max: 0,
+    lastUsedWeight: 0,
+    lastUsedReps: 0,
+    notes: "",
+  },
+  {
+    title: "Glute Bridges",
+    muscleTags: ["Glutes", "Hamstrings"],
+    lastUsed: "20/10/24",
+    max: 0,
+    lastUsedWeight: 0,
+    lastUsedReps: 0,
+    notes: "",
+  },
+  {
+    title: "Step-Ups",
+    muscleTags: ["Glutes", "Quads"],
+    lastUsed: "20/10/24",
+    max: 0,
+    lastUsedWeight: 0,
+    lastUsedReps: 0,
+    notes: "",
+  },
+
+  // Calves Exercises
   {
     title: "Standing Calf Raises",
     muscleTags: ["Calves"],
@@ -232,6 +245,15 @@ export const defaultExercises = [
   },
   {
     title: "Seated Calf Raises",
+    muscleTags: ["Calves"],
+    lastUsed: "20/10/24",
+    max: 0,
+    lastUsedWeight: 0,
+    lastUsedReps: 0,
+    notes: "",
+  },
+  {
+    title: "Leg Press Calf Extensions",
     muscleTags: ["Calves"],
     lastUsed: "20/10/24",
     max: 0,
@@ -288,6 +310,15 @@ export const defaultExercises = [
     lastUsedReps: 0,
     notes: "",
   },
+  {
+    title: "Farmer's Walk",
+    muscleTags: ["Forearms", "Traps"],
+    lastUsed: "20/10/24",
+    max: 0,
+    lastUsedWeight: 0,
+    lastUsedReps: 0,
+    notes: "",
+  },
 
   // Trapezius Exercises
   {
@@ -308,11 +339,20 @@ export const defaultExercises = [
     lastUsedReps: 0,
     notes: "",
   },
+  {
+    title: "Face Pulls",
+    muscleTags: ["Traps", "Shoulders"],
+    lastUsed: "20/10/24",
+    max: 0,
+    lastUsedWeight: 0,
+    lastUsedReps: 0,
+    notes: "",
+  },
 
   // Lower Back Exercises
   {
-    title: "Deadlift",
-    muscleTags: ["Hamstrings", "Lower Back", "Glutes"],
+    title: "Hyperextensions",
+    muscleTags: ["Lower Back", "Glutes"],
     lastUsed: "20/10/24",
     max: 0,
     lastUsedWeight: 0,
@@ -320,7 +360,16 @@ export const defaultExercises = [
     notes: "",
   },
   {
-    title: "Hyperextensions",
+    title: "Good Mornings",
+    muscleTags: ["Lower Back", "Hamstrings"],
+    lastUsed: "20/10/24",
+    max: 0,
+    lastUsedWeight: 0,
+    lastUsedReps: 0,
+    notes: "",
+  },
+  {
+    title: "Deadlifts",
     muscleTags: ["Lower Back", "Glutes", "Hamstrings"],
     lastUsed: "20/10/24",
     max: 0,
@@ -339,142 +388,18 @@ export const defaultExercises = [
     lastUsedReps: 0,
     notes: "",
   },
-
-  // Additional Exercises to Reach 50
-  {
-    title: "Leg Extensions",
-    muscleTags: ["Quads"],
-    lastUsed: "20/10/24",
-    max: 0,
-    lastUsedWeight: 0,
-    lastUsedReps: 0,
-    notes: "",
-  },
-  {
-    title: "Good Mornings",
-    muscleTags: ["Hamstrings", "Lower Back", "Glutes"],
-    lastUsed: "20/10/24",
-    max: 0,
-    lastUsedWeight: 0,
-    lastUsedReps: 0,
-    notes: "",
-  },
-  {
-    title: "Hip Thrusts",
-    muscleTags: ["Glutes", "Hamstrings"],
-    lastUsed: "20/10/24",
-    max: 0,
-    lastUsedWeight: 0,
-    lastUsedReps: 0,
-    notes: "",
-  },
-  {
-    title: "Glute Bridges",
-    muscleTags: ["Glutes", "Hamstrings"],
-    lastUsed: "20/10/24",
-    max: 0,
-    lastUsedWeight: 0,
-    lastUsedReps: 0,
-    notes: "",
-  },
-  {
-    title: "Step-Ups",
-    muscleTags: ["Quads", "Glutes"],
-    lastUsed: "20/10/24",
-    max: 0,
-    lastUsedWeight: 0,
-    lastUsedReps: 0,
-    notes: "",
-  },
-  {
-    title: "Cable Pull-Throughs",
-    muscleTags: ["Glutes", "Hamstrings"],
-    lastUsed: "20/10/24",
-    max: 0,
-    lastUsedWeight: 0,
-    lastUsedReps: 0,
-    notes: "",
-  },
-
-  // Cardio Exercises
-  {
-    title: "Jump Rope",
-    muscleTags: ["Calves"],
-    lastUsed: "20/10/24",
-    max: 0,
-    lastUsedWeight: 0,
-    lastUsedReps: 0,
-    notes: "",
-  },
-
-  // Additional Arm Exercises
-  {
-    title: "Overhead Tricep Extension",
-    muscleTags: ["Triceps"],
-    lastUsed: "20/10/24",
-    max: 0,
-    lastUsedWeight: 0,
-    lastUsedReps: 0,
-    notes: "",
-  },
-  {
-    title: "Preacher Curls",
-    muscleTags: ["Biceps"],
-    lastUsed: "20/10/24",
-    max: 0,
-    lastUsedWeight: 0,
-    lastUsedReps: 0,
-    notes: "",
-  },
-
-  // Additional Shoulder Exercises
-  {
-    title: "Arnold Press",
-    muscleTags: ["Shoulders", "Triceps"],
-    lastUsed: "20/10/24",
-    max: 0,
-    lastUsedWeight: 0,
-    lastUsedReps: 0,
-    notes: "",
-  },
-
-  // Additional Ab Exercises
-  {
-    title: "Leg Raises",
-    muscleTags: ["Abs"],
-    lastUsed: "20/10/24",
-    max: 0,
-    lastUsedWeight: 0,
-    lastUsedReps: 0,
-    notes: "",
-  },
-
-  // Additional Back Exercises
-  {
-    title: "T-Bar Rows",
-    muscleTags: ["Lats", "Biceps"],
-    lastUsed: "20/10/24",
-    max: 0,
-    lastUsedWeight: 0,
-    lastUsedReps: 0,
-    notes: "",
-  },
-
-  // Additional Forearm Exercises
-  {
-    title: "Farmer's Walk",
-    muscleTags: ["Forearms", "Traps"],
-    lastUsed: "20/10/24",
-    max: 0,
-    lastUsedWeight: 0,
-    lastUsedReps: 0,
-    notes: "",
-  },
-
-  // Additional Oblique Exercises
   {
     title: "Woodchoppers",
     muscleTags: ["Obliques", "Abs", "Shoulders"],
+    lastUsed: "20/10/24",
+    max: 0,
+    lastUsedWeight: 0,
+    lastUsedReps: 0,
+    notes: "",
+  },
+  {
+    title: "Bicycle Crunches",
+    muscleTags: ["Obliques", "Abs"],
     lastUsed: "20/10/24",
     max: 0,
     lastUsedWeight: 0,

@@ -212,8 +212,8 @@ export const ExerciseModals = ({
           >
             <TouchableWithoutFeedback onPress={Keyboard.dismiss}>
               <View
-                className="bg-[#1e1e1e] rounded-lg p-4 w-5/6 max-h-[90vh] overflow-y-auto"
-                style={{ maxHeight: "75%" }}
+                className="bg-[#1e1e1e] rounded-lg p-4 w-5/6 overflow-y-auto"
+                style={{ height: "75%" }} // Add minHeight here
               >
                 {/* Display Today's Muscle Groups */}
                 <View className="mb-4">
